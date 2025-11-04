@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.pot
+*.pyc
+
+# Django
+db.sqlite3
+/static/
+media/
+
+# Virtual environment
+venv/
+env/
+Scripts/
+Lib/
+pyvenv.cfg
+
+# VS Code
+.vscode/
+
+# System files
+*.lnk
+desktop.ini
