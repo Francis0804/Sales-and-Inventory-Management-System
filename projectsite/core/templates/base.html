@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Sales and Inventory Management System{% endblock %}</title>
+
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/ready.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+  <div class="wrapper">
+
+    <!-- HEADER -->
+    <div class="main-header">
+      <div class="logo-header">
+        <a href="{% url 'home' %}" class="logo">Sales & Inventory</a>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="scrollbar-inner sidebar-wrapper">
+        <ul class="nav">
+
+          <li class="nav-item">
+            <a href="{% url 'home' %}">
+              <i class="la la-home"></i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{% url 'products-list' %}">
+              <i class="la la-archive"></i>
+              <p>Products</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{% url 'categories-list' %}">
+              <i class="la la-tags"></i>
+              <p>Categories</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{% url 'suppliers-list' %}">
+              <i class="la la-truck"></i>
+              <p>Suppliers</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{% url 'sales-list' %}">
+              <i class="la la-shopping-cart"></i>
+              <p>Sales</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a href="{% url 'purchases-list' %}">
+              <i class="la la-dollar"></i>
+              <p>Purchases</p>
+            </a>
+          </li>
+
+        </ul>
+      </div>
+    </div>
+
+    <!-- MAIN PANEL -->
+    <div class="main-panel">
+      <div class="content">
+        <div class="container-fluid">
+
+          {% block content %}
+          {% endblock %}
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="{% static 'js/core/jquery.3.2.1.min.js' %}"></script>
+  <script src="{% static 'js/core/bootstrap.min.js' %}"></script>
+  <script src="{% static 'js/ready.min.js' %}"></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

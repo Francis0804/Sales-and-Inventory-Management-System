@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Purchases List</h2>
+
+<a href="{% url 'purchases-add' %}" class="btn btn-primary">Add Purchase</a>
+
+<table border="1" cellpadding="5">
+  <tr>
+    <th>Date</th>
+    <th>Supplier</th>
+    <th>Product</th>
+    <th>Quantity</th>
+    <th>Total</th>
+    <th>Actions</th>
+  </tr>
+
+  {% for purchase in purchases %}
+  <tr>
+    <td>{{ purchase.date }}</td>
+    <td>{{ purchase.supplier }}</td>
+    <td>{{ purchase.product }}</td>
+    <td>{{ purchase.quantity }}</td>
+    <td>{{ purchase.total_amount }}</td>
+    <td>
+      <a href="{% url 'purchases-edit' purchase.id %}">Edit</a> |
+      <a href="{% url 'purchases-delete' purchase.id %}">Delete</a>
+    </td>
+  </tr>
+
+  {% empty %}
+  <tr>
+    <td colspan="6">No purchases found.</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
