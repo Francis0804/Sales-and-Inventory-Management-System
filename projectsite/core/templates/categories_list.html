@@ -22,7 +22,6 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>Description</th>
               <th style="width: 180px;">Actions</th>
             </tr>
           </thead>
@@ -31,7 +30,6 @@
             {% for category in categories %}
               <tr>
                 <td>{{ category.name }}</td>
-                <td>{{ category.description|default:"-" }}</td>
                 <td>
                   <a class="btn btn-sm btn-info" href="{% url 'categories-edit' category.pk %}">
                     <i class="bi bi-pencil"></i> Edit

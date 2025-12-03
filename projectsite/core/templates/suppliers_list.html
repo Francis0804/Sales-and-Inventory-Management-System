@@ -22,7 +22,8 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>Contact</th>
+              <th>Contact Person</th>
+              <th>Phone</th>
               <th>Address</th>
               <th style="width: 180px;">Actions</th>
             </tr>
@@ -32,8 +33,9 @@
           {% for supplier in suppliers %}
             <tr>
               <td>{{ supplier.name }}</td>
-              <td>{{ supplier.contact }}</td>
-              <td>{{ supplier.address }}</td>
+              <td>{{ supplier.contact_person|default:"-" }}</td>
+              <td>{{ supplier.phone|default:"-" }}</td>
+              <td>{{ supplier.address|default:"-" }}</td>
               <td>
                 <a href="{% url 'suppliers-edit' supplier.id %}" class="btn btn-sm btn-info">
                   <i class="bi bi-pencil"></i> Edit
