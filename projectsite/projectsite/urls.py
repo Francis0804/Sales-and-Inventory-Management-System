@@ -1,5 +1,6 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from django.contrib.auth import views as auth_views
 from core import views
 
 urlpatterns = [
@@ -10,6 +11,9 @@ urlpatterns = [
 
     # Home
     path('', views.home, name='home'),
+    # Login
+    path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
+    path('register/', views.register, name='register'),
 
     # Categories
     path('categories/', views.CategoryListView.as_view(), name='categories-list'),
