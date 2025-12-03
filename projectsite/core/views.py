@@ -415,9 +415,18 @@ class PurchaseUpdateView(UpdateView):
         context['item_form'] = PurchaseItemForm()
         # Add existing items to context for display
         context['existing_items'] = self.object.items.all() if self.object else []
+        context['is_received'] = self.object.received if self.object else False
         return context
 
     def post(self, request, *args, **kwargs):
+        purchase_order = self.get_object()
+        
+        # Prevent editing if purchase order has been received
+        if purchase_order.received:
+            from django.contrib import messages
+            messages.error(request, 'Cannot edit a received purchase order.')
+            return redirect('purchases-list')
+        
         form = self.get_form()
         if form.is_valid():
             purchase_order = self.get_object()
