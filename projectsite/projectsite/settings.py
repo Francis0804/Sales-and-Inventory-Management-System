@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import socket
 
 # ---------------- BASE DIR ----------------
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -8,11 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-replace-this-with-your-secret-key'
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    'sales-and-inventory-system.pythonanywhere.com'
-]
+# ---------------- ALLOWED HOSTS ----------------
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'sales-and-inventory-system.pythonanywhere.com']
 
 # ---------------- INSTALLED APPS ----------------
 INSTALLED_APPS = [
@@ -23,13 +21,38 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
-    # Third-party apps
-    'widget_tweaks',  # for nicer form rendering
+    # Allauth apps
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 
-    # Your apps
+    # Third-party
+    'widget_tweaks',
+
+    # Local apps
     'core',
 ]
+
+# ---------------- SITE ID ----------------
+# SITE_ID = 1 for local, 2 for PythonAnywhere
+SITE_ID = 2 if "pythonanywhere" in socket.gethostname() else 1
+
+# ---------------- AUTHENTICATION ----------------
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+ACCOUNT_LOGIN_METHODS = {"email", "username"}
+ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_LOGOUT_ON_GET = True
 
 # ---------------- MIDDLEWARE ----------------
 MIDDLEWARE = [
@@ -38,6 +61,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # REQUIRED
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -50,13 +74,12 @@ WSGI_APPLICATION = 'projectsite.wsgi.application'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # Django will look in app 'templates' folders and here:
         'DIRS': [BASE_DIR / 'core' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',
+                'django.template.context_processors.request',  # required by allauth
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -74,18 +97,10 @@ DATABASES = {
 
 # ---------------- PASSWORD VALIDATORS ----------------
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # ---------------- LANGUAGE & TIMEZONE ----------------
@@ -96,10 +111,8 @@ USE_TZ = True
 
 # ---------------- STATIC FILES ----------------
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # local assets folder
-]
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # used by collectstatic in production
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # ---------------- MEDIA FILES ----------------
 MEDIA_URL = '/media/'
