@@ -8,80 +8,139 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
   <link rel="stylesheet" href="{% static 'css/ready.css' %}">
+  <style>
+    /* Minimized sidebar (desktop): hide labels and shrink width */
+    @media (min-width: 768px) {
+      /* smooth width transition and content fade */
+      .sidebar {
+        transition: width .22s ease, padding .22s ease;
+      }
+      .sidebar .list-group-item span {
+        transition: opacity .18s ease, transform .22s ease;
+        display: inline-block;
+      }
+
+      /* collapsed state */
+      .sidebar.sidebar-collapsed {
+        width: 80px !important;
+        min-width: 80px !important;
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+      }
+      /* hide header text but keep close/minimize controls visible */
+      .sidebar.sidebar-collapsed .sidebar-header > div { display: none; }
+      /* center icons, keep them visible and sized nicely */
+      .sidebar.sidebar-collapsed .list-group-item { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
+      .sidebar.sidebar-collapsed .list-group-item .me-2 { margin-right: 0 !important; font-size: 1.15rem; }
+      .sidebar.sidebar-collapsed .list-group-item span { opacity: 0; transform: translateX(-6px); width: 0; height: 0; overflow: hidden; }
+      /* active link styling should still show */
+      .sidebar .list-group-item.active { background-color: rgba(0,123,255,0.08); }
+    }
+  </style>
+  <style>
+    /* Active item should use Bootstrap primary color for clear indication */
+    .sidebar .list-group-item.active {
+      background-color: var(--bs-primary) !important;
+      color: #fff !important;
+    }
+    .sidebar .list-group-item.active .la {
+      color: #fff !important;
+    }
+    /* Slightly darker on hover even when active */
+    .sidebar .list-group-item.active:hover {
+      background-color: color-mix(in srgb, var(--bs-primary) 85%, #000 15%) !important;
+    }
+  </style>
   {% block extra_css %}{% endblock %}
 </head>
 
-<body>
-  <div class="wrapper">
+<body class="bg-light">
+  <div class="wrapper min-vh-100 d-flex flex-column">
 
     <!-- HEADER -->
-    <div class="main-header">
-      <div class="logo-header">
-        <a href="{% url 'home' %}" class="logo">Sales & Inventory</a>
-      </div>
-    </div>
-
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <div class="scrollbar-inner sidebar-wrapper">
-        <ul class="nav">
-
-          <li class="nav-item">
-            <a href="{% url 'home' %}">
-              <i class="la la-home"></i>
-              <p>Dashboard</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="{% url 'products-list' %}">
-              <i class="la la-archive"></i>
-              <p>Products</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="{% url 'categories-list' %}">
-              <i class="la la-tags"></i>
-              <p>Categories</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="{% url 'suppliers-list' %}">
-              <i class="la la-truck"></i>
-              <p>Suppliers</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="{% url 'sales-list' %}">
-              <i class="la la-shopping-cart"></i>
-              <p>Sales</p>
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a href="{% url 'purchases-list' %}">
-              <i class="la la-dollar"></i>
-              <p>Purchases</p>
-            </a>
-          </li>
-
-        </ul>
-      </div>
-    </div>
-
-    <!-- MAIN PANEL -->
-    <div class="main-panel">
-      <div class="content">
-        <div class="container-fluid">
-
-          {% block content %}
-          {% endblock %}
-
+    <header class="bg-primary text-white shadow-sm">
+      <div class="container-fluid d-flex align-items-center justify-content-between py-3">
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle sidebar">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <a href="{% url 'home' %}" class="text-white text-decoration-none fw-bold fs-5">Sales & Inventory</a>
         </div>
       </div>
+    </header>
+
+    <div class="d-flex flex-grow-1">
+      <!-- SIDEBAR -->
+      <div class="collapse" id="sidebarMenu">
+        <nav class="sidebar bg-white border-end shadow-sm p-3" style="min-width: 220px;">
+          <div class="sidebar-header d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <h6 class="mb-0 fw-bold">Navigation</h6>
+          </div>
+          <div class="d-flex align-items-center">
+            <!-- close button (visible on small screens) -->
+            <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true" aria-label="Close sidebar">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Desktop: full-width minimize button matching sidebar width -->
+        <div class="mb-3 d-none d-md-block">
+          <button id="btnMinimizeSidebar" class="text-center py-3 btn btn-sm btn-outline-secondary w-100 text-start" type="button" aria-label="Minimize sidebar" aria-pressed="false">
+            <span id="minimizeIcon" class="me-2" aria-hidden="true">«</span>
+          </button>
+        </div>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}" title="Dashboard" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>
+            <i class="la la-home me-2"></i>
+            <span>Dashboard</span>
+          </a>
+          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'products-list' %}active{% endif %}" href="{% url 'products-list' %}" title="Products" {% if request.resolver_match.url_name == 'products-list' %}aria-current="page"{% endif %}>
+            <i class="la la-archive me-2"></i>
+            <span>Products</span>
+          </a>
+          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'categories-list' %}active{% endif %}" href="{% url 'categories-list' %}" title="Categories" {% if request.resolver_match.url_name == 'categories-list' %}aria-current="page"{% endif %}>
+            <i class="la la-tags me-2"></i>
+            <span>Categories</span>
+          </a>
+          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'suppliers-list' %}active{% endif %}" href="{% url 'suppliers-list' %}" title="Suppliers" {% if request.resolver_match.url_name == 'suppliers-list' %}aria-current="page"{% endif %}>
+            <i class="la la-truck me-2"></i>
+            <span>Suppliers</span>
+          </a>
+          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'sales-list' %}active{% endif %}" href="{% url 'sales-list' %}" title="Sales" {% if request.resolver_match.url_name == 'sales-list' %}aria-current="page"{% endif %}>
+            <i class="la la-shopping-cart me-2"></i>
+            <span>Sales</span>
+          </a>
+          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'purchases-list' %}active{% endif %}" href="{% url 'purchases-list' %}" title="Purchases" {% if request.resolver_match.url_name == 'purchases-list' %}aria-current="page"{% endif %}>
+            <i class="la la-dollar me-2"></i>
+            <span>Purchases</span>
+          </a>
+        </div>
+        </nav>
+      </div>
+
+      <!-- MAIN PANEL -->
+      <main class="main-panel flex-grow-1 p-4">
+        <div class="container-fluid">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h1 class="h4 mb-1">{% block header %}Dashboard{% endblock %}</h1>
+              <p class="text-muted mb-0">{% block subheader %}Monitor inventory, purchases, and sales from one dashboard.{% endblock %}</p>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-outline-primary btn-sm">Export</button>
+              <button class="btn btn-primary btn-sm">Create report</button>
+            </div>
+          </div>
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              {% block content %}
+              {% endblock %}
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
   </div>
@@ -89,6 +148,56 @@
   <script src="{% static 'js/core/jquery.3.2.1.min.js' %}"></script>
   <script src="{% static 'js/ready.min.js' %}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+  <script>
+    (function(){
+      // Minimal Bootstrap-only handler for opening/closing the sidebar on mobile and desktop.
+      var collapseEl = document.getElementById('sidebarMenu');
+      var sidebarNav = document.querySelector('nav.sidebar');
+      if (!collapseEl || !sidebarNav) return;
+
+      if (!(window.bootstrap && bootstrap.Collapse)) return;
+      var bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+
+      // Restore previous open/closed state (optional)
+      try {
+        var wasOpen = localStorage.getItem('sidebarOpen') === 'true';
+        if (wasOpen) bsCollapse.show(); else bsCollapse.hide();
+      } catch (e) { /* ignore */ }
+
+      // Keep aria-expanded in sync for togglers targeting #sidebarMenu
+      var togglers = document.querySelectorAll('[data-bs-toggle="collapse"][data-bs-target="#sidebarMenu"], [data-bs-toggle="collapse"][href="#sidebarMenu"]');
+      function setTogglers(expanded){ togglers.forEach(function(t){ try{ t.setAttribute('aria-expanded', expanded ? 'true' : 'false'); }catch(e){} }); }
+
+      collapseEl.addEventListener('shown.bs.collapse', function(){ try{ localStorage.setItem('sidebarOpen','true'); }catch(e){}; setTogglers(true); });
+      collapseEl.addEventListener('hidden.bs.collapse', function(){ try{ localStorage.setItem('sidebarOpen','false'); }catch(e){}; setTogglers(false); });
+
+      // Preserve existing minimize button behavior (if present) — minimal change: don't remove buttons.
+      var btnMin = document.getElementById('btnMinimizeSidebar');
+      var icon = document.getElementById('minimizeIcon');
+      try {
+        if (btnMin && icon) {
+          var wasMin = localStorage.getItem('sidebarMinimized') === 'true';
+          if (wasMin) sidebarNav.classList.add('sidebar-collapsed');
+          icon.textContent = wasMin ? '»' : '«';
+          btnMin.setAttribute('aria-pressed', wasMin ? 'true' : 'false');
+          btnMin.addEventListener('click', function(){
+            var c = sidebarNav.classList.toggle('sidebar-collapsed');
+            icon.textContent = c ? '»' : '«';
+            btnMin.setAttribute('aria-pressed', c ? 'true' : 'false');
+            try{ localStorage.setItem('sidebarMinimized', c); }catch(e){}
+          });
+        }
+      } catch(e) { console.warn(e); }
+
+      // Simple programmatic API
+      window.sidebarControl = {
+        open: function(){ bsCollapse.show(); },
+        close: function(){ bsCollapse.hide(); },
+        toggle: function(){ bsCollapse.toggle(); }
+      };
+    })();
+  </script>
 
   {% block extra_js %}{% endblock %}
 </body>
