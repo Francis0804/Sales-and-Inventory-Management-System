@@ -865,13 +865,6 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'sales-list' %}active{% endif %}" href="{% url 'sales-list' %}" title="Sales">
-            <i class="bi bi-cart"></i>
-            <span>Sales</span>
-            <span class="nav-tooltip">Sales</span>
-          </a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'purchases-list' %}active{% endif %}" href="{% url 'purchases-list' %}" title="Purchases">
             <i class="bi bi-download"></i>
             <span>Purchases</span>

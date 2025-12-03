@@ -18,12 +18,11 @@
 <div class="card">
   <div class="card-body">
     {% if purchases %}
-      <div class="table-responsive">
+      <div class="table-responsive" style="overflow-x: auto;">
         <table class="table table-hover">
           <thead>
             <tr>
               <th>PO Number</th>
-              <th>Supplier</th>
               <th>Date</th>
               <th>Status</th>
               <th>Total</th>
@@ -35,7 +34,6 @@
           {% for purchase in purchases %}
             <tr>
               <td>{{ purchase.po_number }}</td>
-              <td>{{ purchase.supplier.name }}</td>
               <td>{{ purchase.date|date:"M d, Y" }}</td>
               <td>
                 {% if purchase.received %}
@@ -44,10 +42,10 @@
                   <span class="badge bg-warning">Pending</span>
                 {% endif %}
               </td>
-              <td>${{ purchase.total_amount|currency_format }}</td>
+              <td>P{{ purchase.total_amount|currency_format }}</td>
               <td>
-                <a href="{% url 'purchases-edit' purchase.id %}" class="btn btn-sm btn-info">
-                  <i class="bi bi-pencil"></i> Edit
+                <a href="{% url 'purchases-detail' purchase.id %}" class="btn btn-sm btn-info">
+                  <i class="bi bi-eye"></i> View
                 </a>
                 <a href="{% url 'purchases-delete' purchase.id %}" class="btn btn-sm btn-danger">
                   <i class="bi bi-trash"></i> Delete

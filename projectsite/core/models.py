@@ -40,13 +40,25 @@ class Product(BaseModel):
 
 # ---------- PURCHASE ORDER ----------
 class PurchaseOrder(BaseModel):
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
-    po_number = models.CharField(max_length=50, unique=True)
+    po_number = models.CharField(max_length=50, unique=True, editable=False)
     date = models.DateField(auto_now_add=True)
     received = models.BooleanField(default=False)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=12, help_text="Tax percentage (e.g., 12 for 12%)")
+    total_subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Subtotal before tax")
+    total_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Total after tax")
+    cash = models.DecimalField(max_digits=12, decimal_places=2, default=0, blank=True, null=True)
+    change = models.DecimalField(max_digits=12, decimal_places=2, default=0, blank=True, null=True)
+    cashier = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.po_number:
+            count = PurchaseOrder.objects.count() + 1
+            self.po_number = f"PO-{count:08d}"
+        super().save(*args, **kwargs)
+    
     def __str__(self):
-        return f"PO-{self.po_number}"
+        return self.po_number
 
 class PurchaseItem(models.Model):
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="items")
@@ -57,43 +69,6 @@ class PurchaseItem(models.Model):
         return (self.quantity * self.unit_cost).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     def __str__(self):
         return f"{self.product.name} ({self.quantity})"
-
-# ---------- SALE TRANSACTION ----------
-class SaleTransaction(BaseModel):
-    sale_number = models.CharField(max_length=50, unique=True)
-    cashier = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    date = models.DateTimeField(auto_now_add=True)
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    tax = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    cash = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    change = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-
-    def compute_totals(self):
-        tax_rate = Decimal('0.12')  # 12% VAT
-        self.tax = (self.subtotal * tax_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.total = (self.subtotal + self.tax).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.change = (self.cash - self.total).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-
-    def save(self, *args, **kwargs):
-        # compute totals before saving
-        self.compute_totals()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Sale-{self.sale_number}"
-
-class SaleItem(models.Model):
-    sale = models.ForeignKey(SaleTransaction, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-
-    def line_total(self):
-        return (self.quantity * self.price).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-
-    def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
 
 # ---------- AUDIT LOG ----------
 class AuditLog(BaseModel):

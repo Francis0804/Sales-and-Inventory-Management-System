@@ -75,34 +75,6 @@
     </div>
   </div>
 
-  <!-- Sales Card -->
-  <div class="col-lg-6 col-md-6 mb-3">
-    <div class="card card-stats h-100 border-0 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div class="flex-grow-1 me-3">
-            <p class="card-category text-muted mb-1">
-              <i class="bi bi-cart"></i> Total Sales
-            </p>
-            <h3 class="card-title mb-2" style="color: #23CCEF;">{{ total_sales }}</h3>
-            <div class="stat-info">
-              <small class="badge bg-info-subtle text-info">
-                <i class="bi bi-currency-dollar"></i>
-                ${{ total_sales_amount|currency_format }}
-              </small>
-            </div>
-          </div>
-          <div class="icon-big text-info flex-shrink-0" style="font-size: 48px; opacity: 0.15;">
-            <i class="bi bi-cart"></i>
-          </div>
-        </div>
-      </div>
-      <a href="{% url 'sales-list' %}" class="card-footer bg-transparent border-top text-info text-decoration-none text-center py-2">
-        View Sales <i class="bi bi-chevron-right"></i>
-      </a>
-    </div>
-  </div>
-
   <!-- Purchases Card -->
   <div class="col-lg-6 col-md-6 mb-3">
     <div class="card card-stats h-100 border-0 shadow-sm">
@@ -190,9 +162,6 @@
           <a href="{% url 'products-add' %}" class="btn btn-primary btn-sm">
             <i class="bi bi-plus-circle"></i> Add Product
           </a>
-          <a href="{% url 'sales-add' %}" class="btn btn-success btn-sm">
-            <i class="bi bi-cart-plus"></i> New Sale
-          </a>
           <a href="{% url 'purchases-add' %}" class="btn btn-warning btn-sm">
             <i class="bi bi-download"></i> New Purchase
           </a>
@@ -217,19 +186,15 @@
       </div>
       <div class="card-body">
         <div class="row text-center">
-          <div class="col-md-3">
-            <h6 class="text-muted mb-2">Total Sales Revenue</h6>
-            <h3 class="text-primary">${{ total_sales_amount|currency_format }}</h3>
-          </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <h6 class="text-muted mb-2">Total Purchase Amount</h6>
-            <h3 class="text-info">${{ total_purchase_amount|currency_format }}</h3>
+            <h3 class="text-info">P{{ total_purchase_amount|currency_format }}</h3>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <h6 class="text-muted mb-2">Available Products</h6>
             <h3 class="text-success">{{ total_products }}</h3>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <h6 class="text-muted mb-2">Active Suppliers</h6>
             <h3 class="text-warning">{{ total_suppliers }}</h3>
           </div>
