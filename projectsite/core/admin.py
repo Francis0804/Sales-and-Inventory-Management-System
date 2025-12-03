@@ -1,6 +1,6 @@
 # core/admin.py
 from django.contrib import admin
-from .models import Supplier, Category, Product, PurchaseOrder, PurchaseItem, SaleTransaction, SaleItem, AuditLog
+from .models import Supplier, Category, Product, PurchaseOrder, PurchaseItem, AuditLog
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -22,23 +22,14 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
-    list_display = ('po_number','supplier','date','received','total_amount')
-    search_fields = ('po_number','supplier__name')
-    list_filter = ('supplier','date')
+    list_display = ('po_number','date','received','tax_rate','total_subtotal','total_tax','total_amount','cashier')
+    search_fields = ('po_number',)
+    list_filter = ('date','received','cashier')
+    readonly_fields = ('po_number','total_subtotal','total_tax','total_amount')
 
 @admin.register(PurchaseItem)
 class PurchaseItemAdmin(admin.ModelAdmin):
     list_display = ('purchase_order','product','quantity','unit_cost')
-
-@admin.register(SaleTransaction)
-class SaleTransactionAdmin(admin.ModelAdmin):
-    list_display = ('sale_number','cashier','date','subtotal','tax','total','cash','change')
-    search_fields = ('sale_number','cashier__username')
-    list_filter = ('cashier','date')
-
-@admin.register(SaleItem)
-class SaleItemAdmin(admin.ModelAdmin):
-    list_display = ('sale','product','quantity','price')
 
 @admin.register(AuditLog)
 class AuditLogAdmin(admin.ModelAdmin):

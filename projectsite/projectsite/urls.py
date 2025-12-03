@@ -34,15 +34,10 @@ urlpatterns = [
     path('suppliers/<int:pk>/edit/', views.SupplierUpdateView.as_view(), name='suppliers-edit'),
     path('suppliers/<int:pk>/delete/', views.SupplierDeleteView.as_view(), name='suppliers-delete'),
 
-    # Sales
-    path('sales/', views.SalesListView.as_view(), name='sales-list'),
-    path('sales/add/', views.SalesCreateView.as_view(), name='sales-add'),
-    path('sales/<int:pk>/edit/', views.SalesUpdateView.as_view(), name='sales-edit'),
-    path('sales/<int:pk>/delete/', views.SalesDeleteView.as_view(), name='sales-delete'),
-
     # Purchases
     path('purchases/', views.PurchaseListView.as_view(), name='purchases-list'),
     path('purchases/add/', views.PurchaseCreateView.as_view(), name='purchases-add'),
+    path('purchases/<int:pk>/', views.PurchaseDetailView.as_view(), name='purchases-detail'),
     path('purchases/<int:pk>/edit/', views.PurchaseUpdateView.as_view(), name='purchases-edit'),
     path('purchases/<int:pk>/delete/', views.PurchaseDeleteView.as_view(), name='purchases-delete'),
 ]

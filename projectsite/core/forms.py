@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
-from .models import Category, Product, Supplier, SaleTransaction, PurchaseOrder
+from .models import Category, Product, Supplier, PurchaseOrder, PurchaseItem
 
 class BootstrapFormMixin:
     """Mixin to add Bootstrap styling to form fields"""
@@ -49,19 +49,27 @@ class SupplierForm(BootstrapFormMixin, forms.ModelForm):
             'address': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Address'}),
         }
 
-class SaleTransactionForm(BootstrapFormMixin, forms.ModelForm):
-    class Meta:
-        model = SaleTransaction
-        fields = '__all__'
-
 class PurchaseOrderForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = PurchaseOrder
-        fields = '__all__'
+        fields = ['tax_rate', 'cash', 'total_tax', 'total_subtotal', 'cashier']
         widgets = {
-            'po_number': forms.TextInput(attrs={'placeholder': 'PO number'}),
-            'supplier': forms.Select(),
-            'received': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'tax_rate': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Tax %'}),
+            'cash': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Cash received'}),
+            'total_tax': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Total tax', 'readonly': True}),
+            'total_subtotal': forms.NumberInput(attrs={'step': '0.01', 'placeholder': 'Subtotal', 'readonly': True}),
+            'cashier': forms.Select(),
+        }
+
+class PurchaseItemForm(forms.ModelForm):
+    """Form for adding items to purchase order"""
+    class Meta:
+        model = PurchaseItem
+        fields = ['product', 'quantity', 'unit_cost']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Quantity', 'min': '1'}),
+            'unit_cost': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Unit cost', 'step': '0.01'}),
         }
 
 class BootstrapPasswordChangeForm(PasswordChangeForm):

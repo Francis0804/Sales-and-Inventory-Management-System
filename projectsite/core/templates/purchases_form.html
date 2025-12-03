@@ -1,26 +1,429 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-5">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="mb-0">{% if object %}Edit Purchase{% else %}Add New Purchase{% endif %}</h4>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      {% if is_received %}
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Received Purchase Order</strong> - This purchase order has been marked as received and cannot be edited.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
-      <div class="card-body">
-        <form method="POST" novalidate>
-          {% csrf_token %}
-          {% include 'includes/form.html' %}
-          <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn btn-success">
-              <i class="bi bi-check-circle"></i> Save
-            </button>
-            <a href="/purchases/" class="btn btn-secondary">
-              <i class="bi bi-x-circle"></i> Cancel
-            </a>
-          </div>
-        </form>
+      {% endif %}
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">{% if object %}Edit Purchase Order{% else %}Create New Purchase Order{% endif %}</h4>
+        </div>
+        <div class="card-body">
+          <form method="POST" id="purchaseForm" novalidate>
+            {% csrf_token %}
+            
+            <!-- Product Selection Section -->
+            <div class="mb-4">
+              <h5 class="mb-3">Add Products</h5>
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-md-4">
+                      <label for="productInput" class="form-label">Search Product</label>
+                      <input type="text" id="productInput" class="form-control" placeholder="Type product name...">
+                      <div id="productSuggestions" class="position-absolute bg-white border border-secondary rounded mt-1" style="display:none; max-height: 200px; overflow-y: auto; width: 30%; z-index: 1000;"></div>
+                      <input type="hidden" id="productId">
+                    </div>
+                    <div class="col-md-3">
+                      <label for="itemQuantity" class="form-label">Quantity</label>
+                      <input type="number" id="itemQuantity" class="form-control" placeholder="0" min="1" value="1">
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">Unit Price</label>
+                      <input type="text" id="itemUnitCost" class="form-control" readonly style="background-color: #e9ecef;">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                      <button type="button" class="btn btn-success w-100" id="addItemBtn">
+                        <i class="bi bi-plus-circle"></i> Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="mb-4">
+              <h5 class="mb-3">Purchase Items</h5>
+              <div class="table-responsive">
+                <table class="table table-hover" id="itemsTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Product</th>
+                      <th>Quantity</th>
+                      <th>Unit Cost</th>
+                      <th>Subtotal</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itemsTableBody">
+                  </tbody>
+                  <tfoot class="table-light fw-bold">
+                    <tr>
+                      <td colspan="3" class="text-end">Subtotal:</td>
+                      <td id="totalSubtotal">P0.00</td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td colspan="3" class="text-end"><span id="taxLabel">Tax (12%):</span></td>
+                      <td id="totalTax">P0.00</td>
+                      <td></td>
+                    </tr>
+                    <tr style="border-top: 2px solid #dee2e6;">
+                      <td colspan="3" class="text-end">Total Amount:</td>
+                      <td id="totalAmount">P0.00</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div id="emptyMessage" class="alert alert-info">
+                No products added yet. Add products above.
+              </div>
+            </div>
+
+            <!-- Hidden inputs for form submission -->
+            <div id="hiddenItemsContainer"></div>
+
+            <!-- Payment Section -->
+            <div class="mb-4">
+              <h5 class="mb-3">Payment Information</h5>
+              <div class="card bg-light">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-2">
+                      <label for="id_tax_rate" class="form-label fw-bold">Tax Rate (%)</label>
+                      <input type="number" id="id_tax_rate" name="tax_rate" class="form-control" placeholder="12" step="0.01" value="12">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label fw-bold">Subtotal</label>
+                      <input type="text" id="formSubtotal" class="form-control" readonly style="background-color: #e9ecef;">
+                      <input type="hidden" name="total_subtotal" id="hiddenSubtotal">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label fw-bold">Tax Amount</label>
+                      <input type="text" id="formTax" class="form-control" readonly style="background-color: #e9ecef;">
+                      <input type="hidden" name="total_tax" id="hiddenTax">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label fw-bold">Total</label>
+                      <input type="text" id="formTotal" class="form-control" readonly style="background-color: #e9ecef;">
+                    </div>
+                    <div class="col-md-2">
+                      <label for="cashInput" class="form-label fw-bold">Cash Received</label>
+                      <input type="number" id="cashInput" name="cash" class="form-control" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label fw-bold">Change</label>
+                      <input type="text" id="changeOutput" class="form-control" readonly style="background-color: #e9ecef;">
+                      <input type="hidden" name="change" id="hiddenChange">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hidden inputs for form submission -->
+            <div id="hiddenItemsContainer"></div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success" id="submitBtn" disabled>
+                <i class="bi bi-check-circle"></i> {% if object %}Update Purchase Order{% else %}Create Purchase Order{% endif %}
+              </button>
+              <a href="/purchases/" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancel
+              </a>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+// Initialize items array
+let purchaseItems = [];
+
+// Pre-load existing items if editing
+{% if existing_items %}
+  {% for item in existing_items %}
+    purchaseItems.push({
+      productId: '{{ item.product.id }}',
+      productName: '{{ item.product.name }}',
+      productCode: '{{ item.product.code }}',
+      quantity: {{ item.quantity }},
+      unitCost: parseFloat('{{ item.unit_cost }}'),
+      subtotal: {{ item.line_total }}
+    });
+  {% endfor %}
+  renderTable();
+{% endif %}
+
+// Event listeners
+const productInput = document.getElementById('productInput');
+const productSuggestions = document.getElementById('productSuggestions');
+const products = {% autoescape off %}{{ products_json }}{% endautoescape %};
+
+productInput.addEventListener('input', function() {
+  const query = this.value.toLowerCase().trim();
+  
+  if (query.length === 0) {
+    productSuggestions.style.display = 'none';
+    return;
+  }
+  
+  const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+  
+  if (filtered.length === 0) {
+    productSuggestions.style.display = 'none';
+    return;
+  }
+  
+  productSuggestions.innerHTML = filtered.map(p => 
+    `<div class="p-2 border-bottom" style="cursor: pointer;" data-id="${p.id}" data-price="${p.unit_price}" data-name="${p.name}" data-code="${p.code}">
+      ${p.name} <small class="text-muted">(${p.code}) - Stock: ${p.quantity}</small>
+    </div>`
+  ).join('');
+  
+  productSuggestions.style.display = 'block';
+  
+  // Add click handlers to suggestions
+  productSuggestions.querySelectorAll('div').forEach(item => {
+    item.addEventListener('click', function() {
+      document.getElementById('productId').value = this.dataset.id;
+      productInput.value = this.dataset.name;
+      document.getElementById('itemUnitCost').value = parseFloat(this.dataset.price).toFixed(2);
+      productSuggestions.style.display = 'none';
+    });
+  });
+});
+
+// Close suggestions when clicking outside
+document.addEventListener('click', function(e) {
+  if (e.target.id !== 'productInput') {
+    productSuggestions.style.display = 'none';
+  }
+});
+
+document.getElementById('addItemBtn').addEventListener('click', addItem);
+
+// Tax rate listener to recalculate totals
+document.getElementById('id_tax_rate').addEventListener('input', function() {
+  renderTable();
+});
+
+// Cash input listener for change calculation
+document.getElementById('cashInput').addEventListener('input', function() {
+  const cashAmount = parseFloat(this.value) || 0;
+  const totalAmount = parseFloat(document.getElementById('hiddenSubtotal').value || 0) + parseFloat(document.getElementById('hiddenTax').value || 0);
+  const change = cashAmount - totalAmount;
+  document.getElementById('changeOutput').value = `P${change.toFixed(2)}`;
+  document.getElementById('hiddenChange').value = change.toFixed(2);
+});
+
+document.getElementById('purchaseForm').addEventListener('submit', function(e) {
+  if (purchaseItems.length === 0) {
+    e.preventDefault();
+    alert('Please add at least one product to the purchase order.');
+    return false;
+  }
+  
+  // Validate cash amount
+  const cashAmount = parseFloat(document.getElementById('cashInput').value) || 0;
+  const totalAmount = parseFloat(document.getElementById('hiddenSubtotal').value || 0) + parseFloat(document.getElementById('hiddenTax').value || 0);
+  
+  if (cashAmount === 0) {
+    e.preventDefault();
+    alert('Please enter the cash amount received.');
+    return false;
+  }
+  
+  if (cashAmount < totalAmount) {
+    e.preventDefault();
+    alert(`Insufficient cash! Total amount is P${totalAmount.toFixed(2)}, but you entered P${cashAmount.toFixed(2)}.`);
+    return false;
+  }
+});
+
+function addItem() {
+  const productIdInput = document.getElementById('productId');
+  const productNameInput = document.getElementById('productInput');
+  const quantity = parseInt(document.getElementById('itemQuantity').value);
+  const unitCost = parseFloat(document.getElementById('itemUnitCost').value);
+
+  // Get tax rate from the purchase order form
+  const taxRateInput = document.getElementById('id_tax_rate');
+  const taxRate = taxRateInput ? parseFloat(taxRateInput.value) || 12 : 12;
+
+  // Validation
+  if (!productIdInput.value) {
+    alert('Please select a product from the list');
+    return;
+  }
+
+  if (!quantity || quantity < 1) {
+    alert('Please enter a valid quantity');
+    return;
+  }
+
+  const productId = productIdInput.value;
+  const productName = productNameInput.value;
+
+  // Check for duplicate
+  if (purchaseItems.some(item => item.productId === productId)) {
+    alert('This product is already in the list. Remove it first to add again.');
+    return;
+  }
+
+  // Add to items array
+  const item = {
+    productId: productId,
+    productName: productName,
+    quantity: quantity,
+    unitCost: unitCost,
+    tax: taxRate,
+    subtotal: quantity * unitCost,
+    productCode: ''
+  };
+
+  // Get product code from the selected product
+  const selectedProduct = products.find(p => p.id == productId);
+  if (selectedProduct) {
+    item.productCode = selectedProduct.code;
+  }
+
+  purchaseItems.push(item);
+
+  // Update display
+  renderTable();
+  resetInputs();
+}
+
+function removeItem(index) {
+  purchaseItems.splice(index, 1);
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('itemsTableBody');
+  const emptyMessage = document.getElementById('emptyMessage');
+  const submitBtn = document.getElementById('submitBtn');
+  const container = document.getElementById('hiddenItemsContainer');
+
+  tbody.innerHTML = '';
+  container.innerHTML = '';
+
+  if (purchaseItems.length === 0) {
+    emptyMessage.style.display = 'block';
+    submitBtn.disabled = true;
+    updatePaymentDisplay(0, 0, 0, 0);
+    return;
+  }
+
+  emptyMessage.style.display = 'none';
+  submitBtn.disabled = false;
+
+  let subtotal = 0;
+  let totalTax = 0;
+
+  purchaseItems.forEach((item, index) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>
+        ${item.productName}
+        <br><small class="text-muted">${item.productCode}</small>
+      </td>
+      <td>${item.quantity}</td>
+      <td>P${item.unitCost.toFixed(2)}</td>
+      <td>P${item.subtotal.toFixed(2)}</td>
+      <td>
+        <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(${index})">
+          <i class="bi bi-trash"></i> Remove
+        </button>
+      </td>
+    `;
+    tbody.appendChild(row);
+
+    // Create hidden inputs
+    container.innerHTML += `
+      <input type="hidden" name="product_id" value="${item.productId}">
+      <input type="hidden" name="quantity" value="${item.quantity}">
+      <input type="hidden" name="unit_cost" value="${item.unitCost}">
+    `;
+
+    subtotal += item.subtotal;
+    const taxRate = parseFloat(document.getElementById('id_tax_rate').value) || 12;
+    const itemTax = (item.subtotal * taxRate / 100);
+    totalTax += itemTax;
+  });
+
+  const total = subtotal + totalTax;
+  
+  // Update tax label with current rate
+  const taxRate = parseFloat(document.getElementById('id_tax_rate').value) || 12;
+  document.getElementById('taxLabel').textContent = `Tax (${taxRate}%):`;
+  
+  document.getElementById('totalSubtotal').textContent = `P${subtotal.toFixed(2)}`;
+  document.getElementById('totalTax').textContent = `P${totalTax.toFixed(2)}`;
+  document.getElementById('totalAmount').textContent = `P${total.toFixed(2)}`;
+  
+  updatePaymentDisplay(subtotal, totalTax, total);
+}
+
+function updatePaymentDisplay(subtotal, tax, total, cash = 0) {
+  document.getElementById('formSubtotal').value = `P${subtotal.toFixed(2)}`;
+  document.getElementById('hiddenSubtotal').value = subtotal.toFixed(2);
+  
+  document.getElementById('formTax').value = `P${tax.toFixed(2)}`;
+  document.getElementById('hiddenTax').value = tax.toFixed(2);
+  
+  document.getElementById('formTotal').value = `P${total.toFixed(2)}`;
+  
+  const cashInput = document.getElementById('cashInput').value;
+  if (cashInput) {
+    const cashAmount = parseFloat(cashInput);
+    const change = cashAmount - total;
+    document.getElementById('changeOutput').value = `P${change.toFixed(2)}`;
+    document.getElementById('hiddenChange').value = change.toFixed(2);
+  }
+}
+
+function resetInputs() {
+  document.getElementById('productId').value = '';
+  document.getElementById('productInput').value = '';
+  document.getElementById('itemQuantity').value = '1';
+  document.getElementById('itemUnitCost').value = '';
+  document.getElementById('productInput').focus();
+}
+
+// Disable all form elements if purchase order is received
+{% if is_received %}
+function disableForm() {
+  const inputs = document.querySelectorAll('input, button, select, textarea');
+  inputs.forEach(input => {
+    if (input.id !== 'submitBtn' && input.type !== 'hidden') {
+      input.disabled = true;
+    }
+  });
+  const submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) submitBtn.style.display = 'none';
+}
+document.addEventListener('DOMContentLoaded', disableForm);
+{% endif %}
+</script>
+
+<style>
+#itemsTable {
+  min-height: 200px;
+}
+</style>
 {% endblock %}
