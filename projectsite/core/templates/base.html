@@ -6,199 +6,1079 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Sales and Inventory Management System{% endblock %}</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <link rel="stylesheet" href="{% static 'css/ready.css' %}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  
   <style>
-    /* Minimized sidebar (desktop): hide labels and shrink width */
-    @media (min-width: 768px) {
-      /* smooth width transition and content fade */
-      .sidebar {
-        transition: width .22s ease, padding .22s ease;
+    :root {
+      --primary-color: #1D62F0;
+      --secondary-color: #6c757d;
+      --success-color: #59d05d;
+      --warning-color: #fbad4c;
+      --danger-color: #ff646d;
+      --info-color: #23CCEF;
+      --sidebar-width: 260px;
+      --sidebar-collapsed: 70px;
+      --header-height: 56px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background-color: #f8f9fa;
+      color: #575962;
+      font-size: 14px;
+    }
+
+    /* Layout structure */
+    .wrapper {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    /* Header/Navbar */
+    .navbar-top {
+      background-color: #ffffff;
+      border-bottom: 1px solid #eee;
+      height: var(--header-height);
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(69, 65, 78, 0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1001;
+      display: flex;
+      align-items: center;
+    }
+
+    .navbar-top .navbar-brand {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin: 0;
+      text-decoration: none;
+    }
+
+    .navbar-top .navbar-brand:hover {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      bottom: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      background-color: #ffffff;
+      border-right: 1px solid #eee;
+      box-shadow: 6px 1px 20px rgba(69, 65, 78, 0.1);
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: width 0.22s ease, padding 0.22s ease;
+      z-index: 1000;
+      scrollbar-width: thin;
+      scrollbar-color: #d0d0d0 #f0f0f0;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: #f0f0f0;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: #d0d0d0;
+      border-radius: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: #b0b0b0;
+    }
+
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed);
+    }
+
+    .sidebar.collapsed .nav-item span {
+      display: none;
+      opacity: 0;
+    }
+
+    .sidebar.collapsed .sidebar-header {
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed .sidebar-header h6 {
+      width: 0;
+      opacity: 0;
+    }
+
+    .sidebar-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.22s ease;
+    }
+
+    .sidebar-header h6 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #83848a;
+      transition: all 0.22s ease;
+    }
+
+    .sidebar-collapse-btn {
+      background: none;
+      border: none;
+      color: #83848a;
+      cursor: pointer;
+      padding: 5px;
+      display: none;
+      transition: color 0.2s ease;
+      font-size: 16px;
+    }
+
+    .sidebar-collapse-btn:hover {
+      color: var(--primary-color);
+    }
+
+    .sidebar .nav-item {
+      margin: 0;
+      position: relative;
+    }
+
+    .sidebar .nav-link {
+      padding: 12px 20px;
+      color: #83848a;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-decoration: none;
+    }
+
+    .sidebar .nav-link:hover {
+      background-color: #fbfbfb;
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+    }
+
+    .sidebar .nav-link.active {
+      background-color: #e7f3ff;
+      color: var(--primary-color);
+      border-left-color: var(--primary-color);
+      font-weight: 700;
+    }
+
+    .sidebar .nav-link.active::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background-color: var(--primary-color);
+    }
+
+    .sidebar .nav-link i {
+      margin-right: 15px;
+      width: 25px;
+      text-align: center;
+      color: #C3C5CA;
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar .nav-link:hover i,
+    .sidebar .nav-link.active i {
+      color: var(--primary-color);
+    }
+
+    .sidebar.collapsed .nav-link {
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .sidebar.collapsed .nav-link i {
+      margin: 0;
+      width: auto;
+    }
+
+    /* Tooltip for collapsed sidebar */
+    .sidebar.collapsed .nav-link::after {
+      display: none !important;
+    }
+
+    .sidebar.collapsed .nav-item:hover .nav-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .nav-tooltip {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #333;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      margin-left: 15px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      z-index: 1100;
+      pointer-events: none;
+    }
+
+    .nav-tooltip::before {
+      content: '';
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 5px solid transparent;
+      border-right-color: #333;
+      margin-right: -3px;
+    }
+
+    .sidebar.collapsed .nav-link:hover .nav-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      margin-top: var(--header-height);
+      flex: 1;
+      padding: 30px 20px;
+      transition: margin-left 0.22s ease;
+    }
+
+    .main-content.sidebar-collapsed {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    /* Cards */
+    .card {
+      border: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-radius: 0.375rem;
+      margin-bottom: 25px;
+    }
+
+    .card-header {
+      background-color: transparent;
+      border-bottom: 1px solid #eee;
+      padding: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .card-stats {
+      position: relative;
+      padding: 20px;
+    }
+
+    .card-stats .card-category {
+      font-size: 12px;
+      color: #9A9A9A;
+      font-weight: 600;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .card-stats .card-title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .card-stats .icon-big {
+      font-size: 48px;
+      opacity: 0.6;
+    }
+
+    /* Tables */
+    .table {
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 0;
+    }
+
+    .table thead th {
+      color: #554;
+      border-bottom-width: 2px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      background-color: #f8f9fa;
+      border-color: #ebedf2;
+    }
+
+    .table td, .table th {
+      border-color: #ebedf2;
+      vertical-align: middle;
+      padding: 12px;
+    }
+
+    .table tbody tr:hover {
+      background-color: #fafafa;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #1555d9;
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #5a6268;
+      color: white;
+    }
+
+    .btn-success {
+      background-color: var(--success-color);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #4eb84d;
+      color: white;
+    }
+
+    .btn-warning {
+      background-color: var(--warning-color);
+      color: white;
+    }
+
+    .btn-warning:hover {
+      background-color: #fa9533;
+      color: white;
+    }
+
+    .btn-danger {
+      background-color: var(--danger-color);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #ff505a;
+      color: white;
+    }
+
+    .btn-info {
+      background-color: var(--info-color);
+      color: white;
+    }
+
+    .btn-info:hover {
+      background-color: #1ebcd4;
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .btn-lg {
+      padding: 12px 24px;
+      font-size: 16px;
+    }
+
+    /* Forms */
+    .form-control,
+    .form-select {
+      border: 1px solid #ddd;
+      border-radius: 0.375rem;
+      font-size: 14px;
+      padding: 8px 12px;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      color: #575962;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(29, 98, 240, 0.25);
+      color: #575962;
+    }
+
+    .form-control:disabled,
+    .form-control[readonly] {
+      background-color: #e8e8e8;
+      border-color: #e8e8e8;
+      opacity: 0.6;
+    }
+
+    .form-label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .form-text {
+      font-size: 12px;
+      color: #9A9A9A;
+    }
+
+    /* Alerts */
+    .alert {
+      border-radius: 0.375rem;
+      border: none;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .alert-icon {
+      margin-right: 10px;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .alert-primary {
+      background-color: #e7f3ff;
+      color: #1D62F0;
+      border-left: 4px solid #1D62F0;
+    }
+
+    .alert-success {
+      background-color: #e8f5e9;
+      color: #59d05d;
+      border-left: 4px solid #59d05d;
+    }
+
+    .alert-warning {
+      background-color: #fff3e0;
+      color: #fbad4c;
+      border-left: 4px solid #fbad4c;
+    }
+
+    .alert-danger {
+      background-color: #ffebee;
+      color: #ff646d;
+      border-left: 4px solid #ff646d;
+    }
+
+    .alert-info {
+      background-color: #e0f7fa;
+      color: #23CCEF;
+      border-left: 4px solid #23CCEF;
+    }
+
+    /* Badges */
+    .badge {
+      border-radius: 50px;
+      padding: 6px 12px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid #eee;
+      padding: 20px;
+      background-color: #ffffff;
+      margin-left: var(--sidebar-width);
+      transition: margin-left 0.22s ease;
+      margin-top: auto;
+      font-size: 13px;
+      color: #9A9A9A;
+    }
+
+    .footer.sidebar-collapsed {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    /* Sidebar toggle button */
+    .sidebar-toggle {
+      background: transparent;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      margin-right: 10px;
+      color: #575962;
+      font-size: 20px;
+      transition: color 0.2s;
+      display: none;
+    }
+
+    .sidebar-toggle:hover {
+      color: var(--primary-color);
+    }
+
+    /* Mobile overlay backdrop */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .sidebar-backdrop.show {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
       }
-      .sidebar .list-group-item span {
-        transition: opacity .18s ease, transform .22s ease;
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInLeft {
+      from {
+        transform: translateX(-100%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOutLeft {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-100%);
+      }
+    }
+
+    /* Responsive */
+    @media (min-width: 992px) {
+      .sidebar-collapse-btn {
+        display: block;
+      }
+
+      .sidebar {
+        left: 0 !important;
+        transform: none !important;
+      }
+    }
+
+    @media (max-width: 991px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        transition: left 0.3s ease;
+        z-index: 1050;
+        top: var(--header-height);
+        width: var(--sidebar-width);
+        height: calc(100vh - var(--header-height));
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .sidebar.show {
+        left: 0;
+      }
+
+      .sidebar-collapse-btn {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .main-content.sidebar-collapsed {
+        margin-left: 0;
+      }
+
+      .footer {
+        margin-left: 0;
+      }
+
+      .footer.sidebar-collapsed {
+        margin-left: 0;
+      }
+
+      .sidebar-toggle {
         display: inline-block;
       }
 
-      /* collapsed state */
-      .sidebar.sidebar-collapsed {
-        width: 80px !important;
-        min-width: 80px !important;
-        padding-left: 0.25rem !important;
-        padding-right: 0.25rem !important;
+      .sidebar.collapsed {
+        width: var(--sidebar-width);
       }
-      /* hide header text but keep close/minimize controls visible */
-      .sidebar.sidebar-collapsed .sidebar-header > div { display: none; }
-      /* center icons, keep them visible and sized nicely */
-      .sidebar.sidebar-collapsed .list-group-item { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
-      .sidebar.sidebar-collapsed .list-group-item .me-2 { margin-right: 0 !important; font-size: 1.15rem; }
-      .sidebar.sidebar-collapsed .list-group-item span { opacity: 0; transform: translateX(-6px); width: 0; height: 0; overflow: hidden; }
-      /* active link styling should still show */
-      .sidebar .list-group-item.active { background-color: rgba(0,123,255,0.08); }
+
+      .sidebar.collapsed .nav-item span {
+        display: inline;
+      }
+    }
+
+    @media (max-width: 576px) {
+      :root {
+        --sidebar-width: 85%;
+        --header-height: 56px;
+      }
+
+      .sidebar {
+        width: var(--sidebar-width);
+      }
+
+      .sidebar.collapsed {
+        width: var(--sidebar-width);
+      }
+
+      .sidebar-header {
+        padding: 12px 15px;
+      }
+
+      .sidebar-header h6 {
+        font-size: 12px;
+      }
+
+      .sidebar .nav-link {
+        padding: 10px 15px;
+        font-size: 13px;
+      }
+
+      .sidebar .nav-link i {
+        margin-right: 12px;
+        font-size: 16px;
+      }
+
+      .table {
+        font-size: 12px;
+      }
+
+      .table td, .table th {
+        padding: 8px;
+      }
+
+      .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .card-stats .card-title {
+        font-size: 22px;
+      }
+
+      .card-stats .icon-big {
+        font-size: 36px;
+      }
+
+      .navbar-top {
+        padding: 0 15px;
+      }
+
+      .navbar-top .navbar-brand {
+        font-size: 16px;
+      }
+
+      .main-content {
+        padding: 15px 10px;
+      }
+
+      .footer {
+        padding: 15px;
+        font-size: 12px;
+      }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 360px) {
+      :root {
+        --sidebar-width: 100%;
+      }
+
+      .sidebar-header h6 {
+        font-size: 11px;
+      }
+
+      .sidebar .nav-link span {
+        font-size: 12px;
+      }
+
+      .navbar-brand {
+        font-size: 14px !important;
+      }
+    }
+
+    /* Utility classes */
+    .page-title {
+      margin-bottom: 30px;
+    }
+
+    .page-title h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+      margin: 0 0 10px 0;
+    }
+
+    .page-title p {
+      font-size: 14px;
+      color: #9A9A9A;
+      margin: 0;
+    }
+
+    .text-warning {
+      color: var(--warning-color) !important;
+    }
+
+    .text-success {
+      color: var(--success-color) !important;
+    }
+
+    .text-primary {
+      color: var(--primary-color) !important;
+    }
+
+    .text-danger {
+      color: var(--danger-color) !important;
+    }
+
+    .text-info {
+      color: var(--info-color) !important;
     }
   </style>
-  <style>
-    /* Active item should use Bootstrap primary color for clear indication */
-    .sidebar .list-group-item.active {
-      background-color: var(--bs-primary) !important;
-      color: #fff !important;
-    }
-    .sidebar .list-group-item.active .la {
-      color: #fff !important;
-    }
-    /* Slightly darker on hover even when active */
-    .sidebar .list-group-item.active:hover {
-      background-color: color-mix(in srgb, var(--bs-primary) 85%, #000 15%) !important;
-    }
-  </style>
+
   {% block extra_css %}{% endblock %}
 </head>
 
+</head>
 
-<body class="bg-light">
-  <div class="wrapper min-vh-100 d-flex flex-column">
-
-
-    <!-- HEADER -->
-    <header class="bg-primary text-white shadow-sm">
-      <div class="container-fluid d-flex align-items-center justify-content-between py-3">
-        <div class="d-flex align-items-center gap-2">
-          <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true" aria-label="Toggle sidebar">
-            <span class="navbar-toggler-icon"></span>
+<body>
+  <div class="wrapper">
+    <!-- Header -->
+    <nav class="navbar-top">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+      <a href="{% url 'home' %}" class="navbar-brand">Sales & Inventory System</a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <div class="dropdown">
+          <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle"></i> {{ user.username|default:"User" }}
           </button>
-          <a href="{% url 'home' %}" class="text-white text-decoration-none fw-bold fs-5">Sales & Inventory</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+          </ul>
         </div>
       </div>
-    </header>
+    </nav>
 
-    <div class="d-flex flex-grow-1">
-      <!-- SIDEBAR -->
-      <div class="collapse" id="sidebarMenu">
-        <nav class="sidebar bg-white border-end shadow-sm p-3" style="min-width: 220px;">
-          <div class="sidebar-header d-flex justify-content-between align-items-center mb-2">
-          <div>
-            <h6 class="mb-0 fw-bold">Navigation</h6>
-          </div>
-          <div class="d-flex align-items-center">
-            <!-- close button (visible on small screens) -->
-            <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true" aria-label="Close sidebar">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Desktop: full-width minimize button matching sidebar width -->
-        <div class="mb-3 d-none d-md-block">
-          <button id="btnMinimizeSidebar" class="text-center py-3 btn btn-sm btn-outline-secondary w-100 text-start" type="button" aria-label="Minimize sidebar" aria-pressed="false">
-            <span id="minimizeIcon" class="me-2" aria-hidden="true">«</span>
-          </button>
-        </div>
-        <div class="list-group list-group-flush">
-          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}" title="Dashboard" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>
-            <i class="la la-home me-2"></i>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebarMenu">
+      <div class="sidebar-header">
+        <h6>Navigation</h6>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Collapse sidebar" title="Collapse sidebar">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </div>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}" title="Dashboard">
+            <i class="bi bi-house"></i>
             <span>Dashboard</span>
+            <span class="nav-tooltip">Dashboard</span>
           </a>
-          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'products-list' %}active{% endif %}" href="{% url 'products-list' %}" title="Products" {% if request.resolver_match.url_name == 'products-list' %}aria-current="page"{% endif %}>
-            <i class="la la-archive me-2"></i>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'products-list' %}active{% endif %}" href="{% url 'products-list' %}" title="Products">
+            <i class="bi bi-box"></i>
             <span>Products</span>
+            <span class="nav-tooltip">Products</span>
           </a>
-          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'categories-list' %}active{% endif %}" href="{% url 'categories-list' %}" title="Categories" {% if request.resolver_match.url_name == 'categories-list' %}aria-current="page"{% endif %}>
-            <i class="la la-tags me-2"></i>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'categories-list' %}active{% endif %}" href="{% url 'categories-list' %}" title="Categories">
+            <i class="bi bi-tag"></i>
             <span>Categories</span>
+            <span class="nav-tooltip">Categories</span>
           </a>
-          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'suppliers-list' %}active{% endif %}" href="{% url 'suppliers-list' %}" title="Suppliers" {% if request.resolver_match.url_name == 'suppliers-list' %}aria-current="page"{% endif %}>
-            <i class="la la-truck me-2"></i>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'suppliers-list' %}active{% endif %}" href="{% url 'suppliers-list' %}" title="Suppliers">
+            <i class="bi bi-truck"></i>
             <span>Suppliers</span>
+            <span class="nav-tooltip">Suppliers</span>
           </a>
-          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'sales-list' %}active{% endif %}" href="{% url 'sales-list' %}" title="Sales" {% if request.resolver_match.url_name == 'sales-list' %}aria-current="page"{% endif %}>
-            <i class="la la-shopping-cart me-2"></i>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'sales-list' %}active{% endif %}" href="{% url 'sales-list' %}" title="Sales">
+            <i class="bi bi-cart"></i>
             <span>Sales</span>
+            <span class="nav-tooltip">Sales</span>
           </a>
-          <a class="list-group-item list-group-item-action d-flex align-items-center px-3 py-2 rounded {% if request.resolver_match.url_name == 'purchases-list' %}active{% endif %}" href="{% url 'purchases-list' %}" title="Purchases" {% if request.resolver_match.url_name == 'purchases-list' %}aria-current="page"{% endif %}>
-            <i class="la la-dollar me-2"></i>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'purchases-list' %}active{% endif %}" href="{% url 'purchases-list' %}" title="Purchases">
+            <i class="bi bi-download"></i>
             <span>Purchases</span>
+            <span class="nav-tooltip">Purchases</span>
           </a>
-        </div>
-        </nav>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Mobile backdrop overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <div class="container-fluid">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              <i class="bi bi-exclamation-circle alert-icon"></i>
+              <span>{{ message }}</span>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
       </div>
+    </main>
 
-      <!-- MAIN PANEL -->
-      <main class="main-panel flex-grow-1 p-4">
-        <div class="container-fluid">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h1 class="h4 mb-1">{% block header %}Dashboard{% endblock %}</h1>
-              <p class="text-muted mb-0">{% block subheader %}Monitor inventory, purchases, and sales from one dashboard.{% endblock %}</p>
-            </div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-primary btn-sm">Export</button>
-              <button class="btn btn-primary btn-sm">Create report</button>
-            </div>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container-fluid">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-0">&copy; 2024 Sales & Inventory Management System</p>
           </div>
-          <div class="card shadow-sm border-0">
-            <div class="card-body">
-              {% block content %}
-              {% endblock %}
-            </div>
+          <div class="col-md-6 text-end">
+            <small>Version 1.0</small>
           </div>
         </div>
-      </main>
-    </div>
-
+      </div>
+    </footer>
   </div>
 
-  <script src="{% static 'js/core/jquery.3.2.1.min.js' %}"></script>
-  <script src="{% static 'js/ready.min.js' %}"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    (function(){
-      // Minimal Bootstrap-only handler for opening/closing the sidebar on mobile and desktop.
-      var collapseEl = document.getElementById('sidebarMenu');
-      var sidebarNav = document.querySelector('nav.sidebar');
-      if (!collapseEl || !sidebarNav) return;
+    $(function() {
+      const $sidebarToggle = $('#sidebarToggle');
+      const $sidebarCollapseBtn = $('#sidebarCollapseBtn');
+      const $sidebar = $('#sidebarMenu');
+      const $backdrop = $('#sidebarBackdrop');
+      const $mainContent = $('.main-content');
+      const $footer = $('.footer');
+      
+      let sidebarOpen = false;
+      let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+      let isTransitioning = false;
 
-      if (!(window.bootstrap && bootstrap.Collapse)) return;
-      var bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+      function closeSidebar() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        $sidebar.removeClass('show');
+        $backdrop.removeClass('show');
+        sidebarOpen = false;
+        localStorage.setItem('sidebarOpen', 'false');
+        setTimeout(() => { isTransitioning = false; }, 300);
+      }
 
-      // Restore previous open/closed state (optional)
-      try {
-        var wasOpen = localStorage.getItem('sidebarOpen') === 'true';
-        if (wasOpen) bsCollapse.show(); else bsCollapse.hide();
-      } catch (e) { /* ignore */ }
+      function openSidebar() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        $sidebar.addClass('show');
+        $backdrop.addClass('show');
+        sidebarOpen = true;
+        localStorage.setItem('sidebarOpen', 'true');
+        setTimeout(() => { isTransitioning = false; }, 300);
+      }
 
-      // Keep aria-expanded in sync for togglers targeting #sidebarMenu
-      var togglers = document.querySelectorAll('[data-bs-toggle="collapse"][data-bs-target="#sidebarMenu"], [data-bs-toggle="collapse"][href="#sidebarMenu"]');
-      function setTogglers(expanded){ togglers.forEach(function(t){ try{ t.setAttribute('aria-expanded', expanded ? 'true' : 'false'); }catch(e){} }); }
-
-      collapseEl.addEventListener('shown.bs.collapse', function(){ try{ localStorage.setItem('sidebarOpen','true'); }catch(e){}; setTogglers(true); });
-      collapseEl.addEventListener('hidden.bs.collapse', function(){ try{ localStorage.setItem('sidebarOpen','false'); }catch(e){}; setTogglers(false); });
-
-      // Preserve existing minimize button behavior (if present) — minimal change: don't remove buttons.
-      var btnMin = document.getElementById('btnMinimizeSidebar');
-      var icon = document.getElementById('minimizeIcon');
-      try {
-        if (btnMin && icon) {
-          var wasMin = localStorage.getItem('sidebarMinimized') === 'true';
-          if (wasMin) sidebarNav.classList.add('sidebar-collapsed');
-          icon.textContent = wasMin ? '»' : '«';
-          btnMin.setAttribute('aria-pressed', wasMin ? 'true' : 'false');
-          btnMin.addEventListener('click', function(){
-            var c = sidebarNav.classList.toggle('sidebar-collapsed');
-            icon.textContent = c ? '»' : '«';
-            btnMin.setAttribute('aria-pressed', c ? 'true' : 'false');
-            try{ localStorage.setItem('sidebarMinimized', c); }catch(e){}
-          });
+      // Initialize sidebar state on page load
+      function initializeSidebar() {
+        if (window.innerWidth >= 992) {
+          // Desktop view
+          $sidebar.removeClass('show');
+          $backdrop.removeClass('show');
+          sidebarOpen = false;
+          
+          if (sidebarCollapsed) {
+            $sidebar.addClass('collapsed');
+            $mainContent.addClass('sidebar-collapsed');
+            $footer.addClass('sidebar-collapsed');
+            if ($sidebarCollapseBtn.length) {
+              $sidebarCollapseBtn.html('<i class="bi bi-chevron-right"></i>');
+            }
+          } else {
+            $sidebar.removeClass('collapsed');
+            $mainContent.removeClass('sidebar-collapsed');
+            $footer.removeClass('sidebar-collapsed');
+            if ($sidebarCollapseBtn.length) {
+              $sidebarCollapseBtn.html('<i class="bi bi-chevron-left"></i>');
+            }
+          }
+        } else {
+          // Mobile view - always close
+          $sidebar.removeClass('show').removeClass('collapsed');
+          $backdrop.removeClass('show');
+          $mainContent.removeClass('sidebar-collapsed');
+          $footer.removeClass('sidebar-collapsed');
+          sidebarOpen = false;
+          isTransitioning = false;
         }
-      } catch(e) { console.warn(e); }
+      }
 
-      // Simple programmatic API
-      window.sidebarControl = {
-        open: function(){ bsCollapse.show(); },
-        close: function(){ bsCollapse.hide(); },
-        toggle: function(){ bsCollapse.toggle(); }
-      };
-    })();
+      // Toggle sidebar on mobile or collapse on desktop
+      $sidebarToggle.on('click', function() {
+        if (window.innerWidth >= 992) {
+          // Desktop: toggle collapse
+          sidebarCollapsed = !sidebarCollapsed;
+          localStorage.setItem('sidebarCollapsed', sidebarCollapsed.toString());
+          
+          if (sidebarCollapsed) {
+            $sidebar.addClass('collapsed');
+            $mainContent.addClass('sidebar-collapsed');
+            $footer.addClass('sidebar-collapsed');
+            if ($sidebarCollapseBtn.length) {
+              $sidebarCollapseBtn.html('<i class="bi bi-chevron-right"></i>');
+            }
+          } else {
+            $sidebar.removeClass('collapsed');
+            $mainContent.removeClass('sidebar-collapsed');
+            $footer.removeClass('sidebar-collapsed');
+            if ($sidebarCollapseBtn.length) {
+              $sidebarCollapseBtn.html('<i class="bi bi-chevron-left"></i>');
+            }
+          }
+        } else {
+          // Mobile: toggle show
+          if (sidebarOpen) {
+            closeSidebar();
+          } else {
+            openSidebar();
+          }
+        }
+      });
+
+      // Collapse button for desktop
+      if ($sidebarCollapseBtn.length) {
+        $sidebarCollapseBtn.on('click', function(e) {
+          e.stopPropagation();
+          sidebarCollapsed = !sidebarCollapsed;
+          localStorage.setItem('sidebarCollapsed', sidebarCollapsed.toString());
+          
+          if (sidebarCollapsed) {
+            $sidebar.addClass('collapsed');
+            $mainContent.addClass('sidebar-collapsed');
+            $footer.addClass('sidebar-collapsed');
+            $sidebarCollapseBtn.html('<i class="bi bi-chevron-right"></i>');
+          } else {
+            $sidebar.removeClass('collapsed');
+            $mainContent.removeClass('sidebar-collapsed');
+            $footer.removeClass('sidebar-collapsed');
+            $sidebarCollapseBtn.html('<i class="bi bi-chevron-left"></i>');
+          }
+        });
+      }
+
+      // Close sidebar when clicking backdrop on mobile
+      $backdrop.on('click', function() {
+        if (window.innerWidth < 992 && sidebarOpen) {
+          closeSidebar();
+        }
+      });
+
+      // Close sidebar when clicking a link on mobile
+      $sidebar.find('.nav-link').on('click', function() {
+        if (window.innerWidth < 992) {
+          closeSidebar();
+        }
+      });
+
+      // Handle window resize with debouncing
+      let resizeTimeout;
+      $(window).on('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          initializeSidebar();
+        }, 150);
+      });
+
+      // Prevent sidebar from scrolling body on mobile
+      $sidebar.on('touchmove', function(e) {
+        e.stopPropagation();
+      });
+
+      // Prevent clicks inside sidebar from triggering backdrop close
+      $sidebar.on('click', function(e) {
+        e.stopPropagation();
+      });
+
+      // Initialize on page load
+      initializeSidebar();
+    });
   </script>
 
   {% block extra_js %}{% endblock %}

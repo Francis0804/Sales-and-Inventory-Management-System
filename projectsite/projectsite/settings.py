@@ -36,23 +36,18 @@ INSTALLED_APPS = [
     'core',
 ]
 
-# ---------------- SITE ID ----------------
+# ----------------  SITE ID ----------------
 # SITE_ID = 1 for local, 2 for PythonAnywhere
 SITE_ID = 2 if "pythonanywhere" in socket.gethostname() else 1
 
 # ---------------- AUTHENTICATION ----------------
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
-
-ACCOUNT_LOGIN_METHODS = {"email", "username"}
-ACCOUNT_SIGNUP_FIELDS = ["username*", "email*", "password1*", "password2*"]
-ACCOUNT_EMAIL_VERIFICATION = "none"
-ACCOUNT_LOGOUT_ON_GET = True
+LOGIN_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/login/'
 
 # ---------------- MIDDLEWARE ----------------
 MIDDLEWARE = [
@@ -61,9 +56,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # REQUIRED
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware'
 ]
 
 # ---------------- URLS / WSGI ----------------
