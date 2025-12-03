@@ -4,6 +4,9 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from .models import Category, Product, Supplier, SaleTransaction, PurchaseOrder
 from .forms import CategoryForm, ProductForm, SupplierForm, SaleTransactionForm, PurchaseOrderForm
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login as auth_login
+from django.shortcuts import redirect
 
 # ---------- HOME PAGE ----------
 def home(request):
@@ -20,6 +23,22 @@ def home(request):
         'total_purchases': total_purchases,
     }
     return render(request, 'home.html', context)
+
+
+def register(request):
+    """Simple registration view using Django's UserCreationForm."""
+    if not request.user.is_authenticated:
+        if request.method == 'POST':
+            form = UserCreationForm(request.POST)
+            if form.is_valid():
+                user = form.save()
+                auth_login(request, user)
+                return redirect('login')
+        else:
+            form = UserCreationForm()
+        return render(request, 'accounts/register.html', {'form': form})
+    else:
+        return redirect('home')
 
 
 # ---------- CATEGORY ----------
