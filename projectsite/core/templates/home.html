@@ -1,97 +1,242 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="page-title">
-    <h3>Welcome to Sales and Inventory Management System</h3>
-    <p>
-        Monitor stock levels, manage suppliers, record sales, and track purchases efficiently.
-    </p>
+<!-- Page Header -->
+<div class="mb-4">
+  <h2 class="mb-1">Welcome back! {{ user.username }}, Here's your report</h2>
+  <p class="text-muted">Here's what's happening with your business today.</p>
 </div>
 
-<!-- DASHBOARD CARDS -->
+<!-- Top Stats Cards -->
+<div class="row g-4">
+  <!-- Products Card -->
+  <div class="col-lg-6 col-md-6 mb-3">
+    <div class="card card-stats h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1 me-3">
+            <p class="card-category text-muted mb-1">
+              <i class="bi bi-box"></i> Total Products
+            </p>
+            <h3 class="card-title mb-2">{{ total_products }}</h3>
+            <div class="stat-info">
+              {% if low_stock_products > 0 %}
+                <small class="badge bg-warning-subtle text-warning">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  {{ low_stock_products }} low stock
+                </small>
+              {% else %}
+                <small class="badge bg-success-subtle text-success">
+                  <i class="bi bi-check-circle"></i>
+                  All in stock
+                </small>
+              {% endif %}
+            </div>
+          </div>
+          <div class="icon-big flex-shrink-0" style="font-size: 48px; opacity: 0.15">
+            <i class="bi bi-box"></i>
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'products-list' %}" class="card-footer bg-transparent border-top text-decoration-none text-center py-2">
+        View Products <i class="bi bi-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Suppliers Card -->
+  <div class="col-lg-6 col-md-6 mb-3">
+    <div class="card card-stats h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1 me-3">
+            <p class="card-category text-muted mb-1">
+              <i class="bi bi-truck"></i> Suppliers
+            </p>
+            <h3 class="card-title mb-2" style="color: #59d05d;">{{ total_suppliers }}</h3>
+            <div class="stat-info">
+              <small class="badge bg-success-subtle text-success">
+                <i class="bi bi-check-circle"></i>
+                Active partners
+              </small>
+            </div>
+          </div>
+          <div class="icon-big text-success flex-shrink-0" style="font-size: 48px; opacity: 0.15;">
+            <i class="bi bi-truck"></i>
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'suppliers-list' %}" class="card-footer bg-transparent border-top text-success text-decoration-none text-center py-2">
+        View Suppliers <i class="bi bi-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Sales Card -->
+  <div class="col-lg-6 col-md-6 mb-3">
+    <div class="card card-stats h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1 me-3">
+            <p class="card-category text-muted mb-1">
+              <i class="bi bi-cart"></i> Total Sales
+            </p>
+            <h3 class="card-title mb-2" style="color: #23CCEF;">{{ total_sales }}</h3>
+            <div class="stat-info">
+              <small class="badge bg-info-subtle text-info">
+                <i class="bi bi-currency-dollar"></i>
+                ${{ total_sales_amount|currency_format }}
+              </small>
+            </div>
+          </div>
+          <div class="icon-big text-info flex-shrink-0" style="font-size: 48px; opacity: 0.15;">
+            <i class="bi bi-cart"></i>
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'sales-list' %}" class="card-footer bg-transparent border-top text-info text-decoration-none text-center py-2">
+        View Sales <i class="bi bi-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Purchases Card -->
+  <div class="col-lg-6 col-md-6 mb-3">
+    <div class="card card-stats h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1 me-3">
+            <p class="card-category text-muted mb-1">
+              <i class="bi bi-download"></i> Purchases
+            </p>
+            <h3 class="card-title mb-2" style="color: #ff646d;">{{ total_purchases }}</h3>
+            <div class="stat-info">
+              {% if pending_purchases > 0 %}
+                <small class="badge bg-danger-subtle text-danger">
+                  <i class="bi bi-clock-history"></i>
+                  {{ pending_purchases }} pending
+                </small>
+              {% else %}
+                <small class="badge bg-success-subtle text-success">
+                  <i class="bi bi-check-all"></i>
+                  All received
+                </small>
+              {% endif %}
+            </div>
+          </div>
+          <div class="icon-big text-danger flex-shrink-0" style="font-size: 48px; opacity: 0.15;">
+            <i class="bi bi-download"></i>
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'purchases-list' %}" class="card-footer bg-transparent border-top text-danger text-decoration-none text-center py-2">
+        View Purchases <i class="bi bi-chevron-right"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Alert Cards -->
 <div class="row">
-
-    <div class="col-md-3 mb-4">
-        <div class="card card-stats">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="card-category">Products</p>
-                        <h4 class="card-title">{{ total_products }}</h4>
-                    </div>
-                    <div class="icon-big text-warning">
-                        <i class="bi bi-box"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+  {% if out_of_stock > 0 %}
+  <div class="col-md-6 mb-4">
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+      <i class="bi bi-exclamation-octagon me-2" style="font-size: 24px;"></i>
+      <div>
+        <strong>Out of Stock Alert!</strong>
+        <p class="mb-0">You have {{ out_of_stock }} product(s) out of stock. <a href="{% url 'products-list' %}" class="alert-link">View products</a></p>
+      </div>
     </div>
+  </div>
+  {% endif %}
 
-    <div class="col-md-3 mb-4">
-        <div class="card card-stats">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="card-category">Suppliers</p>
-                        <h4 class="card-title">{{ total_suppliers }}</h4>
-                    </div>
-                    <div class="icon-big text-success">
-                        <i class="bi bi-truck"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+  {% if pending_purchases > 0 %}
+  <div class="col-md-6 mb-4">
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+      <i class="bi bi-hourglass-split me-2" style="font-size: 24px;"></i>
+      <div>
+        <strong>Pending Purchases</strong>
+        <p class="mb-0">{{ pending_purchases }} purchase order(s) awaiting delivery. <a href="{% url 'purchases-list' %}" class="alert-link">View purchases</a></p>
+      </div>
     </div>
+  </div>
+  {% endif %}
 
-    <div class="col-md-3 mb-4">
-        <div class="card card-stats">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="card-category">Sales</p>
-                        <h4 class="card-title">{{ total_sales }}</h4>
-                    </div>
-                    <div class="icon-big text-primary">
-                        <i class="bi bi-cart"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+  {% if low_stock_products > 0 %}
+  <div class="col-md-6 mb-4">
+    <div class="alert alert-info d-flex align-items-center" role="alert">
+      <i class="bi bi-info-circle me-2" style="font-size: 24px;"></i>
+      <div>
+        <strong>Low Stock Items</strong>
+        <p class="mb-0">{{ low_stock_products }} product(s) below reorder level. <a href="{% url 'products-list' %}" class="alert-link">View products</a></p>
+      </div>
     </div>
-
-    <div class="col-md-3 mb-4">
-        <div class="card card-stats">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="card-category">Purchases</p>
-                        <h4 class="card-title">{{ total_purchases }}</h4>
-                    </div>
-                    <div class="icon-big text-danger">
-                        <i class="bi bi-download"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+  </div>
+  {% endif %}
 </div>
 
-<!-- OPTIONAL: Overview Card -->
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-              <h4 class="mb-0">Overview</h4>
-            </div>
-            <div class="card-body">
-              <p>Your Sales and Inventory Management System is configured and ready to use.</p>
-              <p class="mb-0 text-muted">Use the navigation menu to manage products, categories, suppliers, sales, and purchases.</p>
-            </div>
+<!-- Quick Actions -->
+<div class="row">
+  <div class="col-md-12 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Quick Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'products-add' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle"></i> Add Product
+          </a>
+          <a href="{% url 'sales-add' %}" class="btn btn-success btn-sm">
+            <i class="bi bi-cart-plus"></i> New Sale
+          </a>
+          <a href="{% url 'purchases-add' %}" class="btn btn-warning btn-sm">
+            <i class="bi bi-download"></i> New Purchase
+          </a>
+          <a href="{% url 'suppliers-add' %}" class="btn btn-info btn-sm">
+            <i class="bi bi-truck"></i> Add Supplier
+          </a>
+          <a href="{% url 'categories-add' %}" class="btn btn-secondary btn-sm">
+            <i class="bi bi-tag"></i> Add Category
+          </a>
         </div>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- Summary Section -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">System Summary</h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Total Sales Revenue</h6>
+            <h3 class="text-primary">${{ total_sales_amount|currency_format }}</h3>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Total Purchase Amount</h6>
+            <h3 class="text-info">${{ total_purchase_amount|currency_format }}</h3>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Available Products</h6>
+            <h3 class="text-success">{{ total_products }}</h3>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Active Suppliers</h6>
+            <h3 class="text-warning">{{ total_suppliers }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% endblock %}

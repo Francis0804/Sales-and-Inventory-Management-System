@@ -3,7 +3,7 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.db.models import Q
+from django.db.models import Sum, F, Q
 from .models import Category, Product, Supplier, SaleTransaction, PurchaseOrder
 from .forms import CategoryForm, ProductForm, SupplierForm, SaleTransactionForm, PurchaseOrderForm, BootstrapPasswordChangeForm, UserProfileForm
 from django.contrib.auth.forms import UserCreationForm
@@ -12,11 +12,35 @@ from django.shortcuts import redirect
 
 # ---------- HOME PAGE ----------
 def home(request):
+    from decimal import Decimal
+    
+    # Basic counts
+    total_products = Product.objects.count()
+    total_suppliers = Supplier.objects.count()
+    total_sales = SaleTransaction.objects.count()
+    total_purchases = PurchaseOrder.objects.count()
+    
+    # Stock info
+    low_stock_products = Product.objects.filter(quantity__lt=F('reorder_level')).count()
+    out_of_stock = Product.objects.filter(quantity=0).count()
+    
+    # Sales info
+    total_sales_amount = SaleTransaction.objects.aggregate(Sum('total'))['total__sum'] or Decimal('0.00')
+    
+    # Purchase info
+    pending_purchases = PurchaseOrder.objects.filter(received=False).count()
+    total_purchase_amount = PurchaseOrder.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+    
     context = {
-        'total_products': Product.objects.count(),
-        'total_suppliers': Supplier.objects.count(),
-        'total_sales': SaleTransaction.objects.count(),
-        'total_purchases': PurchaseOrder.objects.count(),
+        'total_products': total_products,
+        'total_suppliers': total_suppliers,
+        'total_sales': total_sales,
+        'total_purchases': total_purchases,
+        'low_stock_products': low_stock_products,
+        'out_of_stock': out_of_stock,
+        'total_sales_amount': total_sales_amount,
+        'pending_purchases': pending_purchases,
+        'total_purchase_amount': total_purchase_amount,
     }
     return render(request, 'home.html', context)
 
