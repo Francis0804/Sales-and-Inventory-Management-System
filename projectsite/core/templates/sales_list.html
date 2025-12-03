@@ -1,31 +1,45 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <h2>Sales List</h2>
 
-<a href="{% url 'sales-add' %}" class="btn btn-primary">Add Sale</a>
+<!-- Search Bar -->
+<form method="get" class="mb-3">
+  <input type="text" name="q" class="form-control" placeholder="Search sale..."
+         value="{{ request.GET.q }}">
+</form>
 
-<table border="1" cellpadding="5">
-  <tr>
-    <th>Date</th>
-    <th>Product</th>
-    <th>Quantity</th>
-    <th>Total</th>
-    <th>Actions</th>
-  </tr>
+<a href="{% url 'sales-add' %}" class="btn btn-primary mb-3">Add Sale</a>
 
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Product</th>
+      <th>Quantity</th>
+      <th>Total</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
   {% for sale in sales %}
-  <tr>
-    <td>{{ sale.date }}</td>
-    <td>{{ sale.product }}</td>
-    <td>{{ sale.quantity }}</td>
-    <td>{{ sale.total_amount }}</td>
-    <td>
-      <a href="{% url 'sales-edit' sale.id %}">Edit</a> |
-      <a href="{% url 'sales-delete' sale.id %}">Delete</a>
-    </td>
-  </tr>
+    <tr>
+      <td>{{ sale.date }}</td>
+      <td>{{ sale.product }}</td>
+      <td>{{ sale.quantity }}</td>
+      <td>{{ sale.total_amount }}</td>
+      <td>
+        <a href="{% url 'sales-edit' sale.id %}" class="btn btn-sm btn-primary">Edit</a>
+        <a href="{% url 'sales-delete' sale.id %}" class="btn btn-sm btn-danger">Delete</a>
+      </td>
+    </tr>
   {% empty %}
-  <tr><td colspan="5">No sales found.</td></tr>
+    <tr><td colspan="5">No sales found.</td></tr>
   {% endfor %}
+  </tbody>
 </table>
+
+{% include 'includes/pagination.html' %}
+
 {% endblock %}

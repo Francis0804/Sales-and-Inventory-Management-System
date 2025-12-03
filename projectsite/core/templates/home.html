@@ -10,7 +10,77 @@
     </p>
 </div>
 
+<!-- DASHBOARD CARDS -->
 <div class="row">
+
+    <div class="col-md-3">
+        <div class="card card-stats card-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category">Products</p>
+                        <h4 class="card-title">{{ total_products }}</h4>
+                    </div>
+                    <div class="icon-big text-center">
+                        <i class="la la-archive text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-stats card-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category">Suppliers</p>
+                        <h4 class="card-title">{{ total_suppliers }}</h4>
+                    </div>
+                    <div class="icon-big text-center">
+                        <i class="la la-truck text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-stats card-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category">Sales</p>
+                        <h4 class="card-title">{{ total_sales }}</h4>
+                    </div>
+                    <div class="icon-big text-center">
+                        <i class="la la-shopping-cart text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-stats card-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category">Purchases</p>
+                        <h4 class="card-title">{{ total_purchases }}</h4>
+                    </div>
+                    <div class="icon-big text-center">
+                        <i class="la la-dollar text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- OPTIONAL: Overview Card -->
+<div class="row mt-4">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
@@ -23,4 +93,5 @@
         </div>
     </div>
 </div>
+
 {% endblock %}

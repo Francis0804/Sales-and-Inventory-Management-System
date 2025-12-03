@@ -1,31 +1,45 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <h2>Suppliers List</h2>
 
-<a href="{% url 'suppliers-add' %}" class="btn btn-primary">Add Supplier</a>
+<!-- Search Bar -->
+<form method="get" class="mb-3">
+  <input type="text" name="q" class="form-control" placeholder="Search supplier..."
+         value="{{ request.GET.q }}">
+</form>
 
-<table border="1" cellpadding="5">
-  <tr>
-    <th>Name</th>
-    <th>Contact</th>
-    <th>Address</th>
-    <th>Actions</th>
-  </tr>
+<a href="{% url 'suppliers-add' %}" class="btn btn-primary mb-3">Add Supplier</a>
 
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Contact</th>
+      <th>Address</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
   {% for supplier in suppliers %}
-  <tr>
-    <td>{{ supplier.name }}</td>
-    <td>{{ supplier.contact }}</td>
-    <td>{{ supplier.address }}</td>
-    <td>
-      <a href="{% url 'suppliers-edit' supplier.id %}">Edit</a> |
-      <a href="{% url 'suppliers-delete' supplier.id %}">Delete</a>
-    </td>
-  </tr>
+    <tr>
+      <td>{{ supplier.name }}</td>
+      <td>{{ supplier.contact }}</td>
+      <td>{{ supplier.address }}</td>
+      <td>
+        <a href="{% url 'suppliers-edit' supplier.id %}" class="btn btn-sm btn-primary">Edit</a>
+        <a href="{% url 'suppliers-delete' supplier.id %}" class="btn btn-sm btn-danger">Delete</a>
+      </td>
+    </tr>
   {% empty %}
-  <tr>
-    <td colspan="4">No suppliers found.</td>
-  </tr>
+    <tr>
+      <td colspan="4" class="text-center">No suppliers found.</td>
+    </tr>
   {% endfor %}
+  </tbody>
 </table>
+
+{% include 'includes/pagination.html' %}
+
 {% endblock %}
