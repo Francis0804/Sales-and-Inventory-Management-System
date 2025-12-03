@@ -73,3 +73,14 @@ class BootstrapPasswordChangeForm(PasswordChangeForm):
                 'class': 'form-control',
                 'placeholder': field.label
             })
+
+class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
+    """Form for editing user profile information"""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'placeholder': 'First name'}),
+            'last_name': forms.TextInput(attrs={'placeholder': 'Last name'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Email address'}),
+        }

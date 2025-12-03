@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from .models import Category, Product, Supplier, SaleTransaction, PurchaseOrder
-from .forms import CategoryForm, ProductForm, SupplierForm, SaleTransactionForm, PurchaseOrderForm
+from .forms import CategoryForm, ProductForm, SupplierForm, SaleTransactionForm, PurchaseOrderForm, BootstrapPasswordChangeForm, UserProfileForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login as auth_login
 from django.shortcuts import redirect
@@ -332,3 +332,43 @@ class PurchaseDeleteView(DeleteView):
     model = PurchaseOrder
     template_name = 'purchases_confirm_delete.html'
     success_url = reverse_lazy('purchases-list')
+
+
+# ---------- PROFILE ----------
+def profile(request):
+    """Display and handle user profile information and password changes"""
+    if request.method == 'POST':
+        # Handle password change form submission
+        password_form = BootstrapPasswordChangeForm(request.user, request.POST)
+        if password_form.is_valid():
+            password_form.save()
+            # Show success message
+            from django.contrib import messages
+            messages.success(request, 'Your password has been changed successfully!')
+            return redirect('profile')
+    else:
+        password_form = BootstrapPasswordChangeForm(request.user)
+    
+    context = {
+        'user': request.user,
+        'password_form': password_form,
+    }
+    return render(request, 'profile.html', context)
+
+
+def edit_profile(request):
+    """Edit user profile information"""
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            from django.contrib import messages
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('profile')
+    else:
+        form = UserProfileForm(instance=request.user)
+    
+    context = {
+        'form': form,
+    }
+    return render(request, 'edit_profile.html', context)
