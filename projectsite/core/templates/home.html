@@ -109,6 +109,34 @@
       </a>
     </div>
   </div>
+
+  <!-- Total Tax Card -->
+  <div class="col-lg-6 col-md-6 mb-3">
+    <div class="card card-stats h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1 me-3">
+            <p class="card-category text-muted mb-1">
+              <i class="bi bi-receipt"></i> Total Tax Collected
+            </p>
+            <h3 class="card-title mb-2" style="color: #fd7e14;">P{{ total_tax_amount|currency_format }}</h3>
+            <div class="stat-info">
+              <small class="badge bg-info-subtle text-info">
+                <i class="bi bi-graph-up"></i>
+                All time record
+              </small>
+            </div>
+          </div>
+          <div class="icon-big text-warning flex-shrink-0" style="font-size: 48px; opacity: 0.15;">
+            <i class="bi bi-receipt"></i>
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'purchases-list' %}" class="card-footer bg-transparent border-top text-warning text-decoration-none text-center py-2">
+        View Purchases <i class="bi bi-chevron-right"></i>
+      </a>
+    </div>
+  </div>
 </div>
 
 <!-- Alert Cards -->
@@ -177,26 +205,133 @@
   </div>
 </div>
 
-<!-- Summary Section -->
+<!-- Financial Summary Section -->
 <div class="row">
   <div class="col-md-12">
     <div class="card">
       <div class="card-header">
-        <h5 class="mb-0">System Summary</h5>
+        <h5 class="mb-0">Financial Summary by Period</h5>
       </div>
       <div class="card-body">
-        <div class="row text-center">
-          <div class="col-md-4">
-            <h6 class="text-muted mb-2">Total Purchase Amount</h6>
-            <h3 class="text-info">P{{ total_purchase_amount|currency_format }}</h3>
+        <!-- Period Tabs -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today-tab-pane" type="button" role="tab" aria-controls="today-tab-pane" aria-selected="true">
+              <i class="bi bi-calendar-day"></i> Today
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="week-tab" data-bs-toggle="tab" data-bs-target="#week-tab-pane" type="button" role="tab" aria-controls="week-tab-pane" aria-selected="false">
+              <i class="bi bi-calendar-week"></i> This Week
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="month-tab" data-bs-toggle="tab" data-bs-target="#month-tab-pane" type="button" role="tab" aria-controls="month-tab-pane" aria-selected="false">
+              <i class="bi bi-calendar-month"></i> This Month
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="year-tab" data-bs-toggle="tab" data-bs-target="#year-tab-pane" type="button" role="tab" aria-controls="year-tab-pane" aria-selected="false">
+              <i class="bi bi-calendar"></i> This Year
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-tab-pane" type="button" role="tab" aria-controls="all-tab-pane" aria-selected="false">
+              <i class="bi bi-graph-up"></i> All Time
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="periodTabContent">
+          <!-- Today -->
+          <div class="tab-pane fade show active" id="today-tab-pane" role="tabpanel" aria-labelledby="today-tab" tabindex="0">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Purchase Orders</h6>
+                <h3 class="text-primary">{{ today_purchases }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Total Amount</h6>
+                <h3 class="text-success">P{{ today_purchase_amount|currency_format }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Tax Amount</h6>
+                <h3 class="text-warning">P{{ today_tax_amount|currency_format }}</h3>
+              </div>
+            </div>
           </div>
-          <div class="col-md-4">
-            <h6 class="text-muted mb-2">Available Products</h6>
-            <h3 class="text-success">{{ total_products }}</h3>
+
+          <!-- This Week -->
+          <div class="tab-pane fade" id="week-tab-pane" role="tabpanel" aria-labelledby="week-tab" tabindex="0">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Purchase Orders</h6>
+                <h3 class="text-primary">{{ week_purchases }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Total Amount</h6>
+                <h3 class="text-success">P{{ week_purchase_amount|currency_format }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Tax Amount</h6>
+                <h3 class="text-warning">P{{ week_tax_amount|currency_format }}</h3>
+              </div>
+            </div>
           </div>
-          <div class="col-md-4">
-            <h6 class="text-muted mb-2">Active Suppliers</h6>
-            <h3 class="text-warning">{{ total_suppliers }}</h3>
+
+          <!-- This Month -->
+          <div class="tab-pane fade" id="month-tab-pane" role="tabpanel" aria-labelledby="month-tab" tabindex="0">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Purchase Orders</h6>
+                <h3 class="text-primary">{{ month_purchases }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Total Amount</h6>
+                <h3 class="text-success">P{{ month_purchase_amount|currency_format }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Tax Amount</h6>
+                <h3 class="text-warning">P{{ month_tax_amount|currency_format }}</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- This Year -->
+          <div class="tab-pane fade" id="year-tab-pane" role="tabpanel" aria-labelledby="year-tab" tabindex="0">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Purchase Orders</h6>
+                <h3 class="text-primary">{{ year_purchases }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Total Amount</h6>
+                <h3 class="text-success">P{{ year_purchase_amount|currency_format }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Tax Amount</h6>
+                <h3 class="text-warning">P{{ year_tax_amount|currency_format }}</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- All Time -->
+          <div class="tab-pane fade" id="all-tab-pane" role="tabpanel" aria-labelledby="all-tab" tabindex="0">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Purchase Orders</h6>
+                <h3 class="text-primary">{{ total_purchases }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Total Amount</h6>
+                <h3 class="text-success">P{{ total_purchase_amount|currency_format }}</h3>
+              </div>
+              <div class="col-md-4">
+                <h6 class="text-muted mb-2">Tax Amount</h6>
+                <h3 class="text-warning">P{{ total_tax_amount|currency_format }}</h3>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -159,6 +159,7 @@ let purchaseItems = [];
     purchaseItems.push({
       productId: '{{ item.product.id }}',
       productName: '{{ item.product.name }}',
+      productCode: '{{ item.product.code }}',
       quantity: {{ item.quantity }},
       unitCost: parseFloat('{{ item.unit_cost }}'),
       subtotal: {{ item.line_total }}
@@ -188,8 +189,8 @@ productInput.addEventListener('input', function() {
   }
   
   productSuggestions.innerHTML = filtered.map(p => 
-    `<div class="p-2 border-bottom" style="cursor: pointer;" data-id="${p.id}" data-price="${p.unit_price}" data-name="${p.name}">
-      ${p.name} <small class="text-muted">(Stock: ${p.quantity})</small>
+    `<div class="p-2 border-bottom" style="cursor: pointer;" data-id="${p.id}" data-price="${p.unit_price}" data-name="${p.name}" data-code="${p.code}">
+      ${p.name} <small class="text-muted">(${p.code}) - Stock: ${p.quantity}</small>
     </div>`
   ).join('');
   
@@ -290,8 +291,15 @@ function addItem() {
     quantity: quantity,
     unitCost: unitCost,
     tax: taxRate,
-    subtotal: quantity * unitCost
+    subtotal: quantity * unitCost,
+    productCode: ''
   };
+
+  // Get product code from the selected product
+  const selectedProduct = products.find(p => p.id == productId);
+  if (selectedProduct) {
+    item.productCode = selectedProduct.code;
+  }
 
   purchaseItems.push(item);
 
@@ -330,7 +338,10 @@ function renderTable() {
   purchaseItems.forEach((item, index) => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${item.productName}</td>
+      <td>
+        ${item.productName}
+        <br><small class="text-muted">${item.productCode}</small>
+      </td>
       <td>${item.quantity}</td>
       <td>P${item.unitCost.toFixed(2)}</td>
       <td>P${item.subtotal.toFixed(2)}</td>

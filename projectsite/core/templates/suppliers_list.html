@@ -10,8 +10,13 @@
 
 <!-- Search Bar -->
 <form method="get" class="mb-3">
-  <input type="text" name="q" class="form-control" placeholder="Search supplier..."
-         value="{{ request.GET.q }}">
+  <div class="input-group" style="max-width: 300px;">
+    <input type="text" name="q" class="form-control" placeholder="Search supplier..."
+           value="{{ request.GET.q }}">
+    <button class="btn btn-outline-secondary" type="submit">
+      <i class="bi bi-search"></i>
+    </button>
+  </div>
 </form>
 
 <div class="card">

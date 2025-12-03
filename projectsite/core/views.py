@@ -20,6 +20,7 @@ def serialize_products(products_qs):
     for p in products_qs:
         products_list.append({
             'id': p.id,
+            'code': p.code,
             'name': p.name,
             'unit_price': float(p.unit_price),
             'quantity': p.quantity
@@ -29,6 +30,8 @@ def serialize_products(products_qs):
 # ---------- HOME PAGE ----------
 def home(request):
     from decimal import Decimal
+    from datetime import datetime, timedelta
+    from django.utils import timezone
     
     # Basic counts
     total_products = Product.objects.count()
@@ -42,6 +45,42 @@ def home(request):
     # Purchase info
     pending_purchases = PurchaseOrder.objects.filter(received=False).count()
     total_purchase_amount = PurchaseOrder.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+    total_tax_amount = PurchaseOrder.objects.aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00')
+    
+    # Time-based metrics
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
+    
+    # This week (Monday to current day)
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # This month
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # This year
+    year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # Today's purchases
+    today_purchases = PurchaseOrder.objects.filter(created_at__gte=today_start, created_at__lt=today_end).count()
+    today_purchase_amount = PurchaseOrder.objects.filter(created_at__gte=today_start, created_at__lt=today_end).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+    today_tax_amount = PurchaseOrder.objects.filter(created_at__gte=today_start, created_at__lt=today_end).aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00')
+    
+    # This week's purchases
+    week_purchases = PurchaseOrder.objects.filter(created_at__gte=week_start, created_at__lt=now).count()
+    week_purchase_amount = PurchaseOrder.objects.filter(created_at__gte=week_start, created_at__lt=now).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+    week_tax_amount = PurchaseOrder.objects.filter(created_at__gte=week_start, created_at__lt=now).aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00')
+    
+    # This month's purchases
+    month_purchases = PurchaseOrder.objects.filter(created_at__gte=month_start, created_at__lt=now).count()
+    month_purchase_amount = PurchaseOrder.objects.filter(created_at__gte=month_start, created_at__lt=now).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+    month_tax_amount = PurchaseOrder.objects.filter(created_at__gte=month_start, created_at__lt=now).aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00')
+    
+    # This year's purchases
+    year_purchases = PurchaseOrder.objects.filter(created_at__gte=year_start, created_at__lt=now).count()
+    year_purchase_amount = PurchaseOrder.objects.filter(created_at__gte=year_start, created_at__lt=now).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+    year_tax_amount = PurchaseOrder.objects.filter(created_at__gte=year_start, created_at__lt=now).aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00')
     
     context = {
         'total_products': total_products,
@@ -51,6 +90,23 @@ def home(request):
         'out_of_stock': out_of_stock,
         'pending_purchases': pending_purchases,
         'total_purchase_amount': total_purchase_amount,
+        'total_tax_amount': total_tax_amount,
+        # Today
+        'today_purchases': today_purchases,
+        'today_purchase_amount': today_purchase_amount,
+        'today_tax_amount': today_tax_amount,
+        # This week
+        'week_purchases': week_purchases,
+        'week_purchase_amount': week_purchase_amount,
+        'week_tax_amount': week_tax_amount,
+        # This month
+        'month_purchases': month_purchases,
+        'month_purchase_amount': month_purchase_amount,
+        'month_tax_amount': month_tax_amount,
+        # This year
+        'year_purchases': year_purchases,
+        'year_purchase_amount': year_purchase_amount,
+        'year_tax_amount': year_tax_amount,
     }
     return render(request, 'home.html', context)
 
@@ -135,6 +191,8 @@ class ProductListView(ListView):
 
         q = self.request.GET.get("q")
         sort = self.request.GET.get("sort")
+        category = self.request.GET.get("category")
+        supplier = self.request.GET.get("supplier")
 
         # SEARCH
         if q:
@@ -143,6 +201,14 @@ class ProductListView(ListView):
                 Q(description__icontains=q) |
                 Q(category__name__icontains=q)
             ).distinct()
+
+        # FILTER BY CATEGORY
+        if category:
+            qs = qs.filter(category_id=category)
+
+        # FILTER BY SUPPLIER
+        if supplier:
+            qs = qs.filter(supplier_id=supplier)
 
         # SORT
         allowed_sorts = [
@@ -159,6 +225,15 @@ class ProductListView(ListView):
             qs = qs.order_by("-id")  # default newest first
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all()
+        context['suppliers'] = Supplier.objects.all()
+        context['selected_category'] = self.request.GET.get("category", "")
+        context['selected_supplier'] = self.request.GET.get("supplier", "")
+        context['search_query'] = self.request.GET.get("q", "")
+        return context
 
 
 
@@ -341,6 +416,7 @@ class PurchaseCreateView(CreateView):
         if form.is_valid():
             purchase_order = form.save(commit=False)
             purchase_order.cashier = request.user
+            purchase_order.save()  # Save first to get the PO number and primary key
             
             # Add purchase items from form
             items_data = request.POST.getlist('product_id')
