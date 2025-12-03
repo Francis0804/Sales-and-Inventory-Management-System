@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'core',
 ]
 
-# ---------------- SITE ID ----------------
+# ----------------  SITE ID ----------------
 # SITE_ID = 1 for local, 2 for PythonAnywhere
 SITE_ID = 2 if "pythonanywhere" in socket.gethostname() else 1
 

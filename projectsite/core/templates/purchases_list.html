@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -37,7 +38,7 @@
               <td>{{ purchase.supplier }}</td>
               <td>{{ purchase.product }}</td>
               <td>{{ purchase.quantity }}</td>
-              <td>${{ purchase.total_amount }}</td>
+              <td>${{ purchase.total_amount|currency_format }}</td>
               <td>
                 <a href="{% url 'purchases-edit' purchase.id %}" class="btn btn-sm btn-info">
                   <i class="bi bi-pencil"></i> Edit
