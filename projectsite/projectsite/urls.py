@@ -6,13 +6,12 @@ from core import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Authentication (Login, Logout, Signup, Google Login)
-    path("accounts/", include("allauth.urls")),
-
     # Home
     path('', views.home, name='home'),
-    # Login
+    
+    # Login & Logout
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('register/', views.register, name='register'),
 
     # Categories
