@@ -2,6 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from core import views
+from core.views_backup import (
+    BackupListView, create_backup_view, restore_backup_view, 
+    delete_backup_view, cleanup_backups_view
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -52,4 +56,11 @@ urlpatterns = [
     path('users/', views.UserListView.as_view(), name='user-list'),
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
     path('users/<int:user_id>/assign-role/', views.assign_user_role, name='assign-role'),
+
+    # Backup & Recovery
+    path('backups/', BackupListView.as_view(), name='backup-list'),
+    path('backups/create/', create_backup_view, name='backup-create'),
+    path('backups/<str:backup_filename>/restore/', restore_backup_view, name='backup-restore'),
+    path('backups/<str:backup_filename>/delete/', delete_backup_view, name='backup-delete'),
+    path('backups/cleanup/', cleanup_backups_view, name='backup-cleanup'),
 ]

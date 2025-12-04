@@ -4,26 +4,59 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2 class="mb-0">User Management</h2>
-  <a href="{% url 'register' %}" class="btn btn-primary btn-sm">
-    <i class="bi bi-plus-circle"></i> Add User
-  </a>
+<div class="mb-4">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="mb-1">User Management</h2>
+      <p class="text-muted">Manage system users and assign roles.</p>
+    </div>
+    <div>
+      <span class="badge bg-danger" style="font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+        <i class="bi bi-lock"></i> Admin Only
+      </span>
+    </div>
+  </div>
 </div>
 
 <div class="card">
   <div class="card-body">
-    <!-- Search Bar -->
+    <!-- Search and Filter Bar -->
     <div class="mb-4">
-      <form method="get" class="row g-2 align-items-end">
+      <form method="get" class="row g-3 align-items-end">
+        <!-- Search by Username/Email -->
         <div class="col-md-4">
           <label for="searchInput" class="form-label fw-bold">Search</label>
-          <div class="input-group" style="max-width: 350px;">
+          <div class="input-group">
             <input type="text" id="searchInput" name="q" class="form-control" placeholder="Username or email..." value="{{ request.GET.q }}">
             <button class="btn btn-outline-secondary" type="submit">
               <i class="bi bi-search"></i>
             </button>
           </div>
+        </div>
+
+        <!-- Filter by Role -->
+        <div class="col-md-3">
+          <label for="roleFilter" class="form-label fw-bold">Role</label>
+          <select id="roleFilter" name="role" class="form-select" onchange="this.form.submit()">
+            <option value="">All Roles</option>
+            <option value="admin" {% if request.GET.role == 'admin' %}selected{% endif %}>Administrator</option>
+            <option value="cashier" {% if request.GET.role == 'cashier' %}selected{% endif %}>Cashier</option>
+            <option value="inventory_clerk" {% if request.GET.role == 'inventory_clerk' %}selected{% endif %}>Inventory Clerk</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="col-md-2">
+          <a href="{% url 'user-list' %}" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-arrow-clockwise"></i> Reset
+          </a>
+        </div>
+
+        <!-- Add User Button (Right Side) -->
+        <div class="col-md-3 text-end">
+          <a href="{% url 'register' %}" class="btn btn-primary w-100">
+            <i class="bi bi-plus-circle"></i> Add User
+          </a>
         </div>
       </form>
     </div>
@@ -46,7 +79,7 @@
             {% for user in users %}
             <tr>
               <td><strong>{{ user.username }}</strong></td>
-              <td>{{ user.email }}</td>
+              <td>{{ user.email|default:"-" }}</td>
               <td>{{ user.get_full_name|default:"-" }}</td>
               <td>
                 {% if user.user_role %}

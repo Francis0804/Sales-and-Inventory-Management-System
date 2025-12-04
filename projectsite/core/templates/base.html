@@ -890,6 +890,15 @@
             <span class="nav-tooltip">User Management</span>
           </a>
         </li>
+
+        <!-- Backup & Recovery - Admin Only -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'backup-list' %}active{% endif %}" href="{% url 'backup-list' %}" title="Database Backups">
+            <i class="bi bi-cloud-check"></i>
+            <span>Backups</span>
+            <span class="nav-tooltip">Backup & Recovery</span>
+          </a>
+        </li>
         {% endif %}
       </ul>
     </nav>

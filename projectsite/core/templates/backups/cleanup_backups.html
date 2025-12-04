@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Cleanup Backups{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="mb-0"><i class="bi bi-trash"></i> Cleanup Old Backups</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+          {% csrf_token %}
+          
+          <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle alert-icon"></i>
+            <span>Remove old backups to free up disk space. Backups older than the specified number of days will be deleted.</span>
+          </div>
+
+          <div class="mb-3">
+            <label for="days" class="form-label"><strong>Delete backups older than (days)</strong></label>
+            <input type="number" name="days" id="days" class="form-control" value="30" min="7" max="365" required>
+            <small class="form-text text-muted">Recommended: 30 days. Minimum: 7 days.</small>
+          </div>
+
+          <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle alert-icon"></i>
+            <strong>Note:</strong> This action will permanently delete old backups and cannot be undone. 
+            Make sure you don't need the old backups before proceeding.
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning">
+              <i class="bi bi-trash"></i> Cleanup Backups
+            </button>
+            <a href="{% url 'backup-list' %}" class="btn btn-secondary">
+              <i class="bi bi-x-circle"></i> Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

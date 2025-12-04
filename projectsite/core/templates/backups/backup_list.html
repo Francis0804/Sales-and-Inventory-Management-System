@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Database Backups{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="mb-1">Database Backups</h2>
+      <p class="text-muted">Manage database backups and recovery. Admin only.</p>
+    </div>
+    <div>
+      <span class="badge bg-danger" style="font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+        <i class="bi bi-lock"></i> Admin Only
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Backup Statistics -->
+{% if stats %}
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card card-stats">
+      <div class="card-category">Total Backups</div>
+      <div class="card-title">{{ stats.total_backups }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-stats">
+      <div class="card-category">Total Size</div>
+      <div class="card-title">{{ stats.total_size_mb }} MB</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-stats">
+      <div class="card-category">Latest Backup</div>
+      <div class="card-title" style="font-size: 14px;">
+        {% if stats.latest_backup %}
+          {{ stats.latest_backup.filename|truncatewords:3 }}
+        {% else %}
+          None
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-stats">
+      <div class="card-category">Oldest Backup</div>
+      <div class="card-title" style="font-size: 14px;">
+        {% if stats.oldest_backup %}
+          {{ stats.oldest_backup.filename|truncatewords:3 }}
+        {% else %}
+          None
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="row g-2 mb-4">
+  <div class="col">
+    <a href="{% url 'backup-create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Create New Backup
+    </a>
+  </div>
+  <div class="col">
+    <a href="{% url 'backup-cleanup' %}" class="btn btn-warning">
+      <i class="bi bi-trash"></i> Cleanup Old Backups
+    </a>
+  </div>
+</div>
+
+<!-- Backups List -->
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Available Backups</h5>
+  </div>
+  <div class="card-body">
+    {% if backups %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Date & Time</th>
+              <th>Size</th>
+              <th>Description</th>
+              <th style="width: 200px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for backup in backups %}
+              <tr>
+                <td>
+                  <code style="font-size: 12px;">{{ backup.filename }}</code>
+                </td>
+                <td>{{ backup.datetime|date:"Y-m-d H:i:s" }}</td>
+                <td>
+                  <span class="badge bg-info">{{ backup.size_mb }} MB</span>
+                </td>
+                <td>
+                  {% if backup.description %}
+                    {{ backup.description }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'backup-restore' backup.filename %}" class="btn btn-sm btn-success" title="Restore from this backup">
+                    <i class="bi bi-arrow-clockwise"></i> Restore
+                  </a>
+                  <a href="{% url 'backup-delete' backup.filename %}" class="btn btn-sm btn-danger" title="Delete this backup">
+                    <i class="bi bi-trash"></i> Delete
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+        {% include 'includes/pagination.html' %}
+      {% endif %}
+    {% else %}
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle alert-icon"></i>
+        <span>No backups found. <a href="{% url 'backup-create' %}" class="alert-link">Create one now</a></span>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Backup Info Card -->
+<div class="card mt-4">
+  <div class="card-header">
+    <h5 class="mb-0"><i class="bi bi-info-circle"></i> About Backups</h5>
+  </div>
+  <div class="card-body">
+    <ul>
+      <li><strong>Automated Backups:</strong> The system creates automatic backups. You can also create manual backups.</li>
+      <li><strong>Restore Point:</strong> Before restoring a backup, the current database is automatically saved as a restore point.</li>
+      <li><strong>Cleanup:</strong> Remove old backups to save disk space. Backups older than 30 days are typically removed.</li>
+      <li><strong>Compressed Storage:</strong> Backups are compressed with gzip for efficient storage.</li>
+      <li><strong>Recovery:</strong> In case of data loss, you can restore to any point in time using available backups.</li>
+    </ul>
+  </div>
+</div>
+
+{% endblock %}

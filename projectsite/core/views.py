@@ -2,7 +2,7 @@
 
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, TemplateView
 from django.db.models import Sum, F, Q, Count, Avg
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
@@ -689,10 +689,9 @@ class AdminOrCashierMixin(UserPassesTestMixin):
 # ========================================
 #              REPORTS & ANALYTICS
 # ========================================
-class ReportsView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class ReportsView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
     """Main reports dashboard"""
     template_name = 'reports/dashboard.html'
-    context_object_name = 'reports'
     login_url = 'login'
     
     def get_context_data(self, **kwargs):
@@ -890,12 +889,24 @@ class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
     
     def get_queryset(self):
         q = self.request.GET.get('q')
+        role = self.request.GET.get('role')
         qs = User.objects.all().prefetch_related('user_role')
         
+        # Search by username or email
         if q:
             qs = qs.filter(Q(username__icontains=q) | Q(email__icontains=q))
         
+        # Filter by role
+        if role:
+            qs = qs.filter(user_role__role=role)
+        
         return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['selected_role'] = self.request.GET.get('role', '')
+        context['search_query'] = self.request.GET.get('q', '')
+        return context
 
 
 class UserDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
