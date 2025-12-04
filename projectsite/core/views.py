@@ -3,11 +3,34 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
-from django.db.models import Sum, F, Q
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Category, Product, Supplier, PurchaseOrder, PurchaseItem
+from django.db.models import Sum, F, Q, Count, Avg
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from .models import Category, Product, Supplier, PurchaseOrder, PurchaseItem, UserRole
 from .forms import CategoryForm, ProductForm, SupplierForm, PurchaseOrderForm, PurchaseItemForm, BootstrapPasswordChangeForm, UserProfileForm
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_http_methods
+from decimal import Decimal
+from datetime import datetime, timedelta
+from django.utils import timezone
+import json
+try:
+    from openpyxl import Workbook
+    EXCEL_AVAILABLE = True
+except ImportError:
+    EXCEL_AVAILABLE = False
+
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    PDF_AVAILABLE = True
+except ImportError:
+    PDF_AVAILABLE = False
 from django.contrib.auth import login as auth_login
 from django.http import JsonResponse
 from decimal import Decimal
@@ -120,8 +143,12 @@ def register(request):
             form = UserCreationForm(request.POST)
             if form.is_valid():
                 user = form.save()
+                # Auto-create UserRole as Cashier for new users
+                UserRole.objects.get_or_create(user=user, defaults={'role': 'cashier'})
                 auth_login(request, user)
-                return redirect('login')
+                from django.contrib import messages
+                messages.success(request, 'Registration successful! You are now logged in.')
+                return redirect('home')
         else:
             form = UserCreationForm()
         return render(request, 'accounts/register.html', {'form': form})
@@ -626,3 +653,286 @@ def edit_profile(request):
         'form': form,
     }
     return render(request, 'edit_profile.html', context)
+
+
+# ========================================
+#          ROLE-BASED MIXINS
+# ========================================
+class AdminRequiredMixin(UserPassesTestMixin):
+    """Mixin to require admin role"""
+    def test_func(self):
+        try:
+            return self.request.user.user_role.role == 'admin'
+        except UserRole.DoesNotExist:
+            return False
+    
+    def handle_no_permission(self):
+        from django.contrib import messages
+        messages.error(self.request, 'You do not have permission to access this page.')
+        return redirect('home')
+
+
+class AdminOrCashierMixin(UserPassesTestMixin):
+    """Mixin to require admin or cashier role"""
+    def test_func(self):
+        try:
+            return self.request.user.user_role.role in ['admin', 'cashier']
+        except UserRole.DoesNotExist:
+            return False
+    
+    def handle_no_permission(self):
+        from django.contrib import messages
+        messages.error(self.request, 'You do not have permission to access this page.')
+        return redirect('home')
+
+
+# ========================================
+#              REPORTS & ANALYTICS
+# ========================================
+class ReportsView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+    """Main reports dashboard"""
+    template_name = 'reports/dashboard.html'
+    context_object_name = 'reports'
+    login_url = 'login'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        now = timezone.now()
+        
+        # Date ranges
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+        week_start = now - timedelta(days=now.weekday())
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Daily summary
+        context['daily_summary'] = {
+            'purchases': PurchaseOrder.objects.filter(created_at__gte=today_start, created_at__lt=today_end).count(),
+            'amount': PurchaseOrder.objects.filter(created_at__gte=today_start, created_at__lt=today_end).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00'),
+            'tax': PurchaseOrder.objects.filter(created_at__gte=today_start, created_at__lt=today_end).aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00'),
+        }
+        
+        # Weekly summary
+        context['weekly_summary'] = {
+            'purchases': PurchaseOrder.objects.filter(created_at__gte=week_start, created_at__lt=now).count(),
+            'amount': PurchaseOrder.objects.filter(created_at__gte=week_start, created_at__lt=now).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00'),
+            'tax': PurchaseOrder.objects.filter(created_at__gte=week_start, created_at__lt=now).aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00'),
+        }
+        
+        # Monthly summary
+        context['monthly_summary'] = {
+            'purchases': PurchaseOrder.objects.filter(created_at__gte=month_start, created_at__lt=now).count(),
+            'amount': PurchaseOrder.objects.filter(created_at__gte=month_start, created_at__lt=now).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00'),
+            'tax': PurchaseOrder.objects.filter(created_at__gte=month_start, created_at__lt=now).aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00'),
+        }
+        
+        # Inventory status
+        total_value = 0
+        inventory_items = Product.objects.all()
+        for item in inventory_items:
+            total_value += float(item.quantity * item.unit_price)
+        
+        context['inventory_summary'] = {
+            'total_products': inventory_items.count(),
+            'total_value': Decimal(str(total_value)).quantize(Decimal('0.01')),
+            'low_stock': inventory_items.filter(quantity__lt=F('reorder_level')).count(),
+            'out_of_stock': inventory_items.filter(quantity=0).count(),
+        }
+        
+        return context
+
+
+@login_required(login_url='login')
+def inventory_report(request):
+    """Inventory status report"""
+    # Check if user is admin or inventory clerk
+    try:
+        user_role = request.user.user_role.role
+        if user_role not in ['admin', 'inventory_clerk']:
+            from django.contrib import messages
+            messages.error(request, 'You do not have permission to view inventory reports. Only Admin and Inventory Clerk can access this.')
+            return redirect('home')
+    except UserRole.DoesNotExist:
+        from django.contrib import messages
+        messages.error(request, 'User role not assigned.')
+        return redirect('home')
+    
+    products = Product.objects.select_related('category', 'supplier').all()
+    
+    context = {
+        'products': products,
+        'total_value': sum(p.quantity * p.unit_price for p in products),
+        'low_stock_count': products.filter(quantity__lt=F('reorder_level')).count(),
+        'out_of_stock_count': products.filter(quantity=0).count(),
+    }
+    
+    return render(request, 'reports/inventory_report.html', context)
+
+
+@login_required(login_url='login')
+def fast_moving_report(request):
+    """Fast-moving and slow-moving products report"""
+    # Check if user is admin
+    try:
+        if request.user.user_role.role != 'admin':
+            from django.contrib import messages
+            messages.error(request, 'You do not have permission to view this report. Only Administrators can access Financial & Analytics reports.')
+            return redirect('home')
+    except UserRole.DoesNotExist:
+        from django.contrib import messages
+        messages.error(request, 'User role not assigned.')
+        return redirect('home')
+    
+    # Get products with purchase frequency
+    products = Product.objects.annotate(
+        purchase_count=Count('purchaseitem'),
+        total_quantity_sold=Sum('purchaseitem__quantity')
+    ).order_by('-total_quantity_sold')
+    
+    fast_moving = products[:10]
+    slow_moving = products.reverse()[:10]
+    
+    context = {
+        'fast_moving': fast_moving,
+        'slow_moving': slow_moving,
+    }
+    
+    return render(request, 'reports/fast_moving_report.html', context)
+
+
+@login_required(login_url='login')
+def profit_loss_report(request):
+    """Profit and loss summary report"""
+    # Check if user is admin
+    try:
+        if request.user.user_role.role != 'admin':
+            from django.contrib import messages
+            messages.error(request, 'You do not have permission to view this report. Only Administrators can access Financial & Analytics reports.')
+            return redirect('home')
+    except UserRole.DoesNotExist:
+        from django.contrib import messages
+        messages.error(request, 'User role not assigned.')
+        return redirect('home')
+    
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    purchases = PurchaseOrder.objects.filter(created_at__gte=month_start)
+    
+    total_purchases = purchases.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+    total_tax = purchases.aggregate(Sum('total_tax'))['total_tax__sum'] or Decimal('0.00')
+    total_subtotal = purchases.aggregate(Sum('total_subtotal'))['total_subtotal__sum'] or Decimal('0.00')
+    
+    context = {
+        'purchases': purchases,
+        'total_purchases': total_purchases,
+        'total_tax': total_tax,
+        'total_subtotal': total_subtotal,
+        'month': now.strftime('%B %Y'),
+    }
+    
+    return render(request, 'reports/profit_loss_report.html', context)
+
+
+@login_required(login_url='login')
+@require_http_methods(["GET"])
+def export_report_excel(request):
+    """Export report to Excel"""
+    # Check if user is admin
+    try:
+        if request.user.user_role.role != 'admin':
+            return JsonResponse({'error': 'Only Administrators can export reports'}, status=403)
+    except UserRole.DoesNotExist:
+        return JsonResponse({'error': 'User role not assigned'}, status=403)
+    
+    if not EXCEL_AVAILABLE:
+        return JsonResponse({'error': 'Excel export not available'}, status=400)
+    
+    report_type = request.GET.get('type', 'inventory')
+    now = timezone.now()
+    wb = Workbook()
+    ws = wb.active
+    
+    if report_type == 'inventory':
+        ws.title = "Inventory Report"
+        ws.append(['Product Code', 'Product Name', 'Category', 'Supplier', 'Quantity', 'Unit Price', 'Total Value'])
+        
+        products = Product.objects.select_related('category', 'supplier').all()
+        for p in products:
+            ws.append([
+                p.code,
+                p.name,
+                p.category.name,
+                p.supplier.name if p.supplier else '',
+                p.quantity,
+                float(p.unit_price),
+                float(p.quantity * p.unit_price)
+            ])
+    
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="report_{report_type}_{now.strftime("%Y%m%d")}.xlsx"'
+    wb.save(response)
+    return response
+
+
+# ========================================
+#         USER ROLE MANAGEMENT
+# ========================================
+class UserListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+    """List all users for admin"""
+    model = User
+    template_name = 'users/user_list.html'
+    context_object_name = 'users'
+    paginate_by = 10
+    login_url = 'login'
+    
+    def get_queryset(self):
+        q = self.request.GET.get('q')
+        qs = User.objects.all().prefetch_related('user_role')
+        
+        if q:
+            qs = qs.filter(Q(username__icontains=q) | Q(email__icontains=q))
+        
+        return qs
+
+
+class UserDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+    """View user details"""
+    model = User
+    template_name = 'users/user_detail.html'
+    context_object_name = 'user_obj'
+    login_url = 'login'
+
+
+@login_required(login_url='login')
+def assign_user_role(request, user_id):
+    """Assign role to user"""
+    # Check if user is admin
+    try:
+        if request.user.user_role.role != 'admin':
+            from django.contrib import messages
+            messages.error(request, 'You do not have permission to manage user roles. Only Administrators can perform this action.')
+            return redirect('home')
+    except UserRole.DoesNotExist:
+        return redirect('home')
+    
+    user = User.objects.get(id=user_id)
+    
+    if request.method == 'POST':
+        role = request.POST.get('role')
+        user_role, created = UserRole.objects.get_or_create(user=user)
+        user_role.role = role
+        user_role.save()
+        
+        from django.contrib import messages
+        messages.success(request, f'Role "{user_role.get_role_display()}" assigned to {user.username} successfully!')
+        return redirect('user-detail', pk=user_id)
+    
+    context = {
+        'user_obj': user,
+        'role_choices': UserRole.ROLE_CHOICES,
+        'current_role': user.user_role.role if hasattr(user, 'user_role') else 'cashier'
+    }
+    return render(request, 'users/assign_role.html', context)

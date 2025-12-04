@@ -4,10 +4,21 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- Page Header -->
+<!-- Page Header with User Role -->
 <div class="mb-4">
-  <h2 class="mb-1">Welcome back! {{ user.username }}, Here's your report</h2>
-  <p class="text-muted">Here's what's happening with your business today.</p>
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="mb-1">Welcome back! {{ user.username }}, Here's your report</h2>
+      <p class="text-muted">Here's what's happening with your business today.</p>
+    </div>
+    <div>
+      {% if user.user_role %}
+        <span class="badge bg-primary" style="font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+          <i class="bi bi-shield-check"></i> Role: {{ user.user_role.get_role_display }}
+        </span>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 <!-- Top Stats Cards -->

@@ -40,4 +40,16 @@ urlpatterns = [
     path('purchases/<int:pk>/', views.PurchaseDetailView.as_view(), name='purchases-detail'),
     path('purchases/<int:pk>/edit/', views.PurchaseUpdateView.as_view(), name='purchases-edit'),
     path('purchases/<int:pk>/delete/', views.PurchaseDeleteView.as_view(), name='purchases-delete'),
+
+    # Reports & Analytics
+    path('reports/', views.ReportsView.as_view(), name='reports-dashboard'),
+    path('reports/inventory/', views.inventory_report, name='inventory-report'),
+    path('reports/fast-moving/', views.fast_moving_report, name='fast-moving-report'),
+    path('reports/profit-loss/', views.profit_loss_report, name='profit-loss-report'),
+    path('reports/export/excel/', views.export_report_excel, name='export-excel'),
+
+    # User Management
+    path('users/', views.UserListView.as_view(), name='user-list'),
+    path('users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
+    path('users/<int:user_id>/assign-role/', views.assign_user_role, name='assign-role'),
 ]

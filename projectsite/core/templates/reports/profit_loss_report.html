@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load currency_filters %}
+
+{% block title %}Profit & Loss Report{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+  <a href="{% url 'reports-dashboard' %}" class="btn btn-sm btn-secondary mb-3">
+    <i class="bi bi-chevron-left"></i> Back to Reports
+  </a>
+  <h2 class="mb-1">Profit & Loss Summary - {{ month }}</h2>
+  <p class="text-muted">Financial summary for the current month.</p>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">Total Subtotal</h6>
+        <h3 class="text-primary">P{{ total_subtotal|currency_format }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">Total Tax</h6>
+        <h3 class="text-warning">P{{ total_tax|currency_format }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body text-center">
+        <h6 class="text-muted mb-2">Total Amount</h6>
+        <h3 class="text-success">P{{ total_purchases|currency_format }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed Breakdown -->
+<div class="card">
+  <div class="card-header bg-light">
+    <h6 class="mb-0">Monthly Transactions</h6>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover table-striped">
+        <thead>
+          <tr>
+            <th>PO Number</th>
+            <th>Date</th>
+            <th>Subtotal</th>
+            <th>Tax Amount</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for purchase in purchases %}
+          <tr>
+            <td><strong>{{ purchase.po_number }}</strong></td>
+            <td>{{ purchase.created_at|date:"M d, Y" }}</td>
+            <td>P{{ purchase.total_subtotal|currency_format }}</td>
+            <td>P{{ purchase.total_tax|currency_format }}</td>
+            <td>P{{ purchase.total_amount|currency_format }}</td>
+            <td>
+              {% if purchase.received %}
+                <span class="badge bg-success">Received</span>
+              {% else %}
+                <span class="badge bg-warning">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted">No transactions this month</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

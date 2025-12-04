@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0">User Management</h2>
+  <a href="{% url 'register' %}" class="btn btn-primary btn-sm">
+    <i class="bi bi-plus-circle"></i> Add User
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <!-- Search Bar -->
+    <div class="mb-4">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label for="searchInput" class="form-label fw-bold">Search</label>
+          <div class="input-group" style="max-width: 350px;">
+            <input type="text" id="searchInput" name="q" class="form-control" placeholder="Username or email..." value="{{ request.GET.q }}">
+            <button class="btn btn-outline-secondary" type="submit">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Users Table -->
+    {% if users %}
+      <div class="table-responsive" style="overflow-x: auto;">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Full Name</th>
+              <th>Role</th>
+              <th>Joined</th>
+              <th style="width: 250px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td><strong>{{ user.username }}</strong></td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.get_full_name|default:"-" }}</td>
+              <td>
+                {% if user.user_role %}
+                  <span class="badge bg-info">{{ user.user_role.get_role_display }}</span>
+                {% else %}
+                  <span class="badge bg-secondary">Unassigned</span>
+                {% endif %}
+              </td>
+              <td>{{ user.date_joined|date:"M d, Y" }}</td>
+              <td>
+                <a href="{% url 'user-detail' user.id %}" class="btn btn-sm btn-info">
+                  <i class="bi bi-eye"></i> View
+                </a>
+                <a href="{% url 'assign-role' user.id %}" class="btn btn-sm btn-warning">
+                  <i class="bi bi-gear"></i> Assign Role
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">First</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Previous</a>
+              </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% else %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Last</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No users found.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

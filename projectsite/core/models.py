@@ -3,6 +3,22 @@ from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal, ROUND_HALF_UP
 
+# ---------- USER ROLE ----------
+class UserRole(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Administrator'),
+        ('cashier', 'Cashier'),
+        ('inventory_clerk', 'Inventory Clerk'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_role')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='cashier')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.get_role_display()}"
+    
+    class Meta:
+        verbose_name_plural = "User Roles"
+
 # ---------- BASE MODEL ----------
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)

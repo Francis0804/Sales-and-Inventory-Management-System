@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load currency_filters %}
+
+{% block title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="mb-1">Reports & Analytics</h2>
+      <p class="text-muted">Comprehensive business analytics and reporting tools.</p>
+    </div>
+    <div>
+      <span class="badge bg-danger" style="font-size: 0.9rem; padding: 0.5rem 0.75rem;">
+        <i class="bi bi-lock"></i> Admin Only
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-4 mb-4">
+  <!-- Daily Stats -->
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">Today</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <small class="text-muted">Purchase Orders</small>
+          <h4 class="text-primary">{{ daily_summary.purchases }}</h4>
+        </div>
+        <div class="mb-3">
+          <small class="text-muted">Total Amount</small>
+          <h4 class="text-success">P{{ daily_summary.amount|currency_format }}</h4>
+        </div>
+        <div>
+          <small class="text-muted">Tax Collected</small>
+          <h4 class="text-warning">P{{ daily_summary.tax|currency_format }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Stats -->
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">This Week</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <small class="text-muted">Purchase Orders</small>
+          <h4 class="text-primary">{{ weekly_summary.purchases }}</h4>
+        </div>
+        <div class="mb-3">
+          <small class="text-muted">Total Amount</small>
+          <h4 class="text-success">P{{ weekly_summary.amount|currency_format }}</h4>
+        </div>
+        <div>
+          <small class="text-muted">Tax Collected</small>
+          <h4 class="text-warning">P{{ weekly_summary.tax|currency_format }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Stats -->
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">This Month</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <small class="text-muted">Purchase Orders</small>
+          <h4 class="text-primary">{{ monthly_summary.purchases }}</h4>
+        </div>
+        <div class="mb-3">
+          <small class="text-muted">Total Amount</small>
+          <h4 class="text-success">P{{ monthly_summary.amount|currency_format }}</h4>
+        </div>
+        <div>
+          <small class="text-muted">Tax Collected</small>
+          <h4 class="text-warning">P{{ monthly_summary.tax|currency_format }}</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Inventory Summary -->
+<div class="row g-4 mb-4">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">Inventory Status</h6>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Total Products</h6>
+            <h3 class="text-primary">{{ inventory_summary.total_products }}</h3>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Inventory Value</h6>
+            <h3 class="text-success">P{{ inventory_summary.total_value|currency_format }}</h3>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Low Stock Items</h6>
+            <h3 class="text-warning">{{ inventory_summary.low_stock }}</h3>
+          </div>
+          <div class="col-md-3">
+            <h6 class="text-muted mb-2">Out of Stock</h6>
+            <h3 class="text-danger">{{ inventory_summary.out_of_stock }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Report Links -->
+<div class="row g-4">
+  <!-- Inventory Report -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-box"></i> Inventory Status Report</h6>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">View detailed inventory status including stock levels, values, and reorder points.</p>
+        <a href="{% url 'inventory-report' %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-file-text"></i> View Report
+        </a>
+        <a href="{% url 'export-excel' %}?type=inventory" class="btn btn-success btn-sm">
+          <i class="bi bi-file-earmark-excel"></i> Export Excel
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fast/Slow Moving Products -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Fast & Slow Moving Products</h6>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">Identify top-selling and slow-moving products for better inventory management.</p>
+        <a href="{% url 'fast-moving-report' %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-file-text"></i> View Report
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profit & Loss Report -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-cash-coin"></i> Profit & Loss Report</h6>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">Monthly financial summary showing revenue, costs, and tax information.</p>
+        <a href="{% url 'profit-loss-report' %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-file-text"></i> View Report
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Management -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-people"></i> User Management</h6>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">Manage user accounts and assign roles (Admin, Cashier, Inventory Clerk).</p>
+        <a href="{% url 'user-list' %}" class="btn btn-primary btn-sm">
+          <i class="bi bi-file-text"></i> Manage Users
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

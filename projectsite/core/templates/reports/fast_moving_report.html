@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load currency_filters %}
+
+{% block title %}Fast & Slow Moving Products Report{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+  <a href="{% url 'reports-dashboard' %}" class="btn btn-sm btn-secondary mb-3">
+    <i class="bi bi-chevron-left"></i> Back to Reports
+  </a>
+  <h2 class="mb-1">Fast & Slow Moving Products</h2>
+  <p class="text-muted">Analysis of top-selling and slow-moving products for inventory optimization.</p>
+</div>
+
+<!-- Two Column Layout -->
+<div class="row g-4">
+  <!-- Fast Moving Products -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-success bg-opacity-10">
+        <h6 class="mb-0 text-success"><i class="bi bi-arrow-up"></i> Top 10 Fast-Moving Products</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Purchases</th>
+                <th>Qty Sold</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in fast_moving %}
+              <tr>
+                <td><strong>{{ product.name }}</strong></td>
+                <td><small>{{ product.category.name }}</small></td>
+                <td><span class="badge bg-success">{{ product.purchase_count }}</span></td>
+                <td>{{ product.total_quantity_sold|default:"0" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">No purchase data available</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slow Moving Products -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-warning bg-opacity-10">
+        <h6 class="mb-0 text-warning"><i class="bi bi-arrow-down"></i> Top 10 Slow-Moving Products</h6>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Purchases</th>
+                <th>Qty Sold</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in slow_moving %}
+              <tr>
+                <td><strong>{{ product.name }}</strong></td>
+                <td><small>{{ product.category.name }}</small></td>
+                <td><span class="badge bg-warning">{{ product.purchase_count }}</span></td>
+                <td>{{ product.total_quantity_sold|default:"0" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">No purchase data available</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
