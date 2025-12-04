@@ -40,22 +40,22 @@ class Command(BaseCommand):
 
         # Products (10)
         products = [
-            ("PRD-001","Ballpen", "Stationery", s1, '15.00', 50, 200),
-            ("PRD-002","Notebook","Stationery", s1, '45.00', 30, 150),
-            ("PRD-003","Coffee","Beverages", s2, '120.00', 20, 60),
-            ("PRD-004","Chips","Snacks", s2, '35.00', 25, 80),
-            ("PRD-005","Liquid Soap","Cleaning Supplies", s1, '75.00', 10, 40),
-            ("PRD-006","Printer Paper (A4)","Office Equipment", s1, '250.00', 15, 100),
-            ("PRD-007","Laptop","Electronics", s2, '35000.00', 3, 10),
-            ("PRD-008","Mouse","Electronics", s2, '500.00', 10, 25),
-            ("PRD-009","Shampoo","Personal Care", s1, '120.00', 20, 50),
-            ("PRD-010","Toothpaste","Personal Care", s1, '90.00', 20, 45),
+            ("PRD-001","Ballpen", "Stationery", s1, '15.00', 200),
+            ("PRD-002","Notebook","Stationery", s1, '45.00', 150),
+            ("PRD-003","Coffee","Beverages", s2, '120.00', 60),
+            ("PRD-004","Chips","Snacks", s2, '35.00', 80),
+            ("PRD-005","Liquid Soap","Cleaning Supplies", s1, '75.00', 40),
+            ("PRD-006","Printer Paper (A4)","Office Equipment", s1, '250.00', 100),
+            ("PRD-007","Laptop","Electronics", s2, '35000.00', 10),
+            ("PRD-008","Mouse","Electronics", s2, '500.00', 25),
+            ("PRD-009","Shampoo","Personal Care", s1, '120.00', 50),
+            ("PRD-010","Toothpaste","Personal Care", s1, '90.00', 45),
         ]
-        for code,name,cat_name,supplier,price,reorder,qty in products:
+        for code,name,cat_name,supplier,price,qty in products:
             cat = Category.objects.get(name=cat_name)
             prod, created = Product.objects.get_or_create(code=code, defaults={
                 'name':name, 'category':cat, 'supplier':supplier, 'unit_price':Decimal(price),
-                'reorder_level':reorder, 'quantity':qty
+                'quantity':qty
             })
         self.stdout.write("Created/checked 10 products")
 

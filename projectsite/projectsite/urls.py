@@ -63,4 +63,6 @@ urlpatterns = [
     path('backups/<str:backup_filename>/restore/', restore_backup_view, name='backup-restore'),
     path('backups/<str:backup_filename>/delete/', delete_backup_view, name='backup-delete'),
     path('backups/cleanup/', cleanup_backups_view, name='backup-cleanup'),
+    # Audit logs (admin)
+    path('audit-logs/', views.AuditLogListView.as_view(), name='audit-log-list'),
 ]

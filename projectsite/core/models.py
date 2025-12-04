@@ -1,5 +1,6 @@
 # core/models.py
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -49,7 +50,8 @@ class Product(BaseModel):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
-    reorder_level = models.IntegerField(default=5)
+    # keep a compatibility column for existing databases; default comes from settings
+    reorder_level = models.IntegerField(default=getattr(settings, 'DEFAULT_REORDER_LEVEL', 5))
     quantity = models.IntegerField(default=0)  # materialized for quick read
     def __str__(self):
         return f"{self.code} - {self.name}"
