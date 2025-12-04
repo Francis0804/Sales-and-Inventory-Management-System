@@ -29,6 +29,8 @@ def serialize_products(products_qs):
 
 # ---------- HOME PAGE ----------
 def home(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     from decimal import Decimal
     from datetime import datetime, timedelta
     from django.utils import timezone
@@ -125,6 +127,13 @@ def register(request):
         return render(request, 'accounts/register.html', {'form': form})
     else:
         return redirect('home')
+
+
+def logout_view(request):
+    """Logout view that handles both GET and POST requests"""
+    from django.contrib.auth import logout as auth_logout
+    auth_logout(request)
+    return redirect('login')
 
 
 # ---------- CATEGORY ----------
