@@ -191,30 +191,24 @@ class CategoryListView(LoginRequiredMixin, ListView):
 
 
 
-class CategoryCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class CategoryCreateView(LoginRequiredMixin, CreateView):
     model = Category
     form_class = CategoryForm
     template_name = 'categories_form.html'
     success_url = reverse_lazy('categories-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
-class CategoryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class CategoryUpdateView(LoginRequiredMixin, UpdateView):
     model = Category
     form_class = CategoryForm
     template_name = 'categories_form.html'
     success_url = reverse_lazy('categories-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
-class CategoryDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class CategoryDeleteView(LoginRequiredMixin, DeleteView):
     model = Category
     template_name = 'categories_confirm_delete.html'
     success_url = reverse_lazy('categories-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
 
@@ -280,30 +274,24 @@ class ProductListView(LoginRequiredMixin, ListView):
 
 
 
-class ProductCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class ProductCreateView(LoginRequiredMixin, CreateView):
     model = Product
     form_class = ProductForm
     template_name = 'products_form.html'
     success_url = reverse_lazy('products-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
-class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
     form_class = ProductForm
     template_name = 'products_form.html'
     success_url = reverse_lazy('products-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
-class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class ProductDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
     template_name = 'products_confirm_delete.html'
     success_url = reverse_lazy('products-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
 
@@ -349,30 +337,24 @@ class SupplierListView(LoginRequiredMixin, ListView):
 
 
 
-class SupplierCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class SupplierCreateView(LoginRequiredMixin, CreateView):
     model = Supplier
     form_class = SupplierForm
     template_name = 'suppliers_form.html'
     success_url = reverse_lazy('suppliers-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
-class SupplierUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class SupplierUpdateView(LoginRequiredMixin, UpdateView):
     model = Supplier
     form_class = SupplierForm
     template_name = 'suppliers_form.html'
     success_url = reverse_lazy('suppliers-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
-class SupplierDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class SupplierDeleteView(LoginRequiredMixin, DeleteView):
     model = Supplier
     template_name = 'suppliers_confirm_delete.html'
     success_url = reverse_lazy('suppliers-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
 
@@ -441,7 +423,7 @@ class PurchaseDetailView(LoginRequiredMixin, DetailView):
         
         return redirect('purchases-detail', pk=purchase.id)
 
-class PurchaseCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class PurchaseCreateView(LoginRequiredMixin, CreateView):
     model = PurchaseOrder
     form_class = PurchaseOrderForm
     template_name = 'purchases_form.html'
@@ -539,13 +521,11 @@ class PurchaseCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             return self.render_to_response(context)
 
 
-class PurchaseUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class PurchaseUpdateView(LoginRequiredMixin, UpdateView):
     model = PurchaseOrder
     form_class = PurchaseOrderForm
     template_name = 'purchases_form.html'
     success_url = reverse_lazy('purchases-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -637,12 +617,10 @@ class PurchaseUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return self.render_to_response(context)
 
 
-class PurchaseDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class PurchaseDeleteView(LoginRequiredMixin, DeleteView):
     model = PurchaseOrder
     template_name = 'purchases_confirm_delete.html'
     success_url = reverse_lazy('purchases-list')
-    def test_func(self):
-        return getattr(self.request.user, 'is_staff', False)
 
 
 # ---------- PROFILE ----------
