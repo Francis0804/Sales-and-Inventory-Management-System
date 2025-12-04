@@ -33,12 +33,14 @@
           <p>{{ user_obj.get_full_name|default:"-" }}</p>
         </div>
         <div class="mb-3">
-          <label class="form-label text-muted">Staff Status</label>
-          <p>{% if user_obj.is_staff %}<span class="badge bg-success">Staff</span>{% else %}<span class="badge bg-secondary">Regular User</span>{% endif %}</p>
-        </div>
-        <div class="mb-3">
-          <label class="form-label text-muted">Superuser Status</label>
-          <p>{% if user_obj.is_superuser %}<span class="badge bg-danger">Superuser</span>{% else %}<span class="badge bg-secondary">Regular User</span>{% endif %}</p>
+          <label class="form-label text-muted">User Role</label>
+          <p>
+            {% if user_obj.is_staff %}
+              <span class="badge bg-danger">Admin</span>
+            {% else %}
+              <span class="badge bg-secondary">Staff</span>
+            {% endif %}
+          </p>
         </div>
         <div class="mb-3">
           <label class="form-label text-muted">Joined</label>
@@ -48,37 +50,6 @@
           <label class="form-label text-muted">Last Login</label>
           <p>{% if user_obj.last_login %}{{ user_obj.last_login|date:"F d, Y H:i" }}{% else %}Never{% endif %}</p>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Role Card -->
-  <div class="col-lg-6">
-    <div class="card">
-      <div class="card-header bg-light">
-        <h6 class="mb-0">User Role</h6>
-      </div>
-      <div class="card-body">
-        {% if user_obj.user_role %}
-          <div class="alert alert-info" role="alert">
-            <h5 class="alert-heading">Current Role</h5>
-            <p class="mb-0"><strong>{{ user_obj.user_role.get_role_display }}</strong></p>
-          </div>
-          <div class="mb-3">
-            <p class="text-muted mb-2">Role Description:</p>
-            {% if user_obj.user_role.role == 'admin' %}
-              <p>Full access to all system features including reports, user management, and configuration.</p>
-            {% elif user_obj.user_role.role == 'cashier' %}
-              <p>Can create and manage purchase orders and view basic inventory information.</p>
-            {% elif user_obj.user_role.role == 'inventory_clerk' %}
-              <p>Can manage inventory, view stock levels, and generate inventory reports.</p>
-            {% endif %}
-          </div>
-        {% else %}
-          <div class="alert alert-warning" role="alert">
-            <i class="bi bi-exclamation-triangle"></i> No role assigned yet.
-          </div>
-        {% endif %}
         <a href="{% url 'assign-role' user_obj.id %}" class="btn btn-warning btn-sm">
           <i class="bi bi-gear"></i> Change Role
         </a>

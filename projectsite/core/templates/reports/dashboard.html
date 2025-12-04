@@ -106,16 +106,16 @@
             <h3 class="text-primary">{{ inventory_summary.total_products }}</h3>
           </div>
           <div class="col-md-3">
+            <h6 class="text-muted mb-2">Total Collected</h6>
+            <h3 class="text-info">{{ inventory_summary.total_collected }}</h3>
+          </div>
+          <div class="col-md-3">
             <h6 class="text-muted mb-2">Inventory Value</h6>
             <h3 class="text-success">P{{ inventory_summary.total_value|currency_format }}</h3>
           </div>
           <div class="col-md-3">
             <h6 class="text-muted mb-2">Low Stock Items</h6>
             <h3 class="text-warning">{{ inventory_summary.low_stock }}</h3>
-          </div>
-          <div class="col-md-3">
-            <h6 class="text-muted mb-2">Out of Stock</h6>
-            <h3 class="text-danger">{{ inventory_summary.out_of_stock }}</h3>
           </div>
         </div>
       </div>

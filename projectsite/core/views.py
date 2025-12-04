@@ -372,6 +372,7 @@ class PurchaseListView(ListView):
 
         q = self.request.GET.get("q")
         sort = self.request.GET.get("sort")
+        status = self.request.GET.get("status")
 
         # SEARCH
         if q:
@@ -381,6 +382,12 @@ class PurchaseListView(ListView):
                 Q(po_number__icontains=q) |
                 Q(date__icontains=q)
             ).distinct()
+
+        # STATUS FILTER
+        if status == "received":
+            qs = qs.filter(received=True)
+        elif status == "pending":
+            qs = qs.filter(received=False)
 
         # SORT
         allowed_sorts = [
@@ -729,12 +736,15 @@ class ReportsView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
         
         # Inventory status
         total_value = 0
+        total_collected = 0
         inventory_items = Product.objects.all()
         for item in inventory_items:
             total_value += float(item.quantity * item.unit_price)
+            total_collected += item.quantity
         
         context['inventory_summary'] = {
             'total_products': inventory_items.count(),
+            'total_collected': total_collected,
             'total_value': Decimal(str(total_value)).quantize(Decimal('0.01')),
             'low_stock': inventory_items.filter(quantity__lt=F('reorder_level')).count(),
             'out_of_stock': inventory_items.filter(quantity=0).count(),
