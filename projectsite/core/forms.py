@@ -26,14 +26,14 @@ class CategoryForm(BootstrapFormMixin, forms.ModelForm):
 class ProductForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = Product
-        fields = '__all__'
+        # exclude reorder_level from product forms
+        exclude = ['reorder_level']
         widgets = {
             'code': forms.TextInput(attrs={'placeholder': 'Product code', 'maxlength': 30}),
             'name': forms.TextInput(attrs={'placeholder': 'Product name'}),
             'category': forms.Select(),
             'supplier': forms.Select(),
             'unit_price': forms.NumberInput(attrs={'step': '0.01'}),
-            'reorder_level': forms.NumberInput(),
             'quantity': forms.NumberInput(),
         }
 

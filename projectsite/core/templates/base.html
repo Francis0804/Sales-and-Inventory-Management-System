@@ -899,6 +899,13 @@
             <span class="nav-tooltip">Backup & Recovery</span>
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'audit-log-list' %}active{% endif %}" href="{% url 'audit-log-list' %}" title="Audit Log">
+            <i class="bi bi-journal-text"></i>
+            <span>Audit Log</span>
+            <span class="nav-tooltip">Audit Log</span>
+          </a>
+        </li>
         {% endif %}
       </ul>
     </nav>

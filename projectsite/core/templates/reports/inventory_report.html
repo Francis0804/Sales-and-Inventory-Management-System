@@ -57,7 +57,6 @@
             <th>Category</th>
             <th>Supplier</th>
             <th>Quantity</th>
-            <th>Reorder Level</th>
             <th>Unit Price</th>
             <th>Total Value</th>
             <th>Status</th>
@@ -71,13 +70,12 @@
             <td>{{ product.category.name }}</td>
             <td>{% if product.supplier %}{{ product.supplier.name }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
             <td>{{ product.quantity }}</td>
-            <td>{{ product.reorder_level }}</td>
             <td>P{{ product.unit_price|currency_format }}</td>
             <td>P{{ product.quantity|mul:product.unit_price|currency_format }}</td>
             <td>
               {% if product.quantity == 0 %}
                 <span class="badge bg-danger">Out of Stock</span>
-              {% elif product.quantity < product.reorder_level %}
+              {% elif product.quantity < default_reorder_level %}
                 <span class="badge bg-warning">Low Stock</span>
               {% else %}
                 <span class="badge bg-success">In Stock</span>

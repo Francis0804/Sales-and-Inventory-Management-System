@@ -4,10 +4,11 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, TemplateView
 from django.db.models import Sum, F, Q, Count, Avg
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Category, Product, Supplier, PurchaseOrder, PurchaseItem, UserRole
+from .models import Category, Product, Supplier, PurchaseOrder, PurchaseItem, UserRole, AuditLog
 from .forms import CategoryForm, ProductForm, SupplierForm, PurchaseOrderForm, PurchaseItemForm, BootstrapPasswordChangeForm, UserProfileForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login as auth_login, logout as auth_logout
@@ -63,8 +64,8 @@ def home(request):
     total_suppliers = Supplier.objects.count()
     total_purchases = PurchaseOrder.objects.count()
     
-    # Stock info
-    low_stock_products = Product.objects.filter(quantity__lt=F('reorder_level')).count()
+    # Stock info (use default threshold)
+    low_stock_products = Product.objects.filter(quantity__lt=settings.DEFAULT_REORDER_LEVEL).count()
     out_of_stock = Product.objects.filter(quantity=0).count()
     
     # Purchase info
@@ -145,6 +146,15 @@ def register(request):
                 user = form.save()
                 # Auto-create UserRole as Cashier for new users
                 UserRole.objects.get_or_create(user=user, defaults={'role': 'cashier'})
+                try:
+                    AuditLog.objects.create(
+                        user=user,
+                        action='user_registered',
+                        target=f'User:{user.pk}',
+                        detail=f'User {user.username} registered via registration form'
+                    )
+                except Exception:
+                    pass
                 auth_login(request, user)
                 from django.contrib import messages
                 messages.success(request, 'Registration successful! You are now logged in.')
@@ -303,6 +313,7 @@ class SupplierListView(LoginRequiredMixin, ListView):
     model = Supplier
     template_name = 'suppliers_list.html'
     context_object_name = 'suppliers'
+    paginate_by = 10
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -747,10 +758,78 @@ class ReportsView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
             'total_products': inventory_items.count(),
             'total_collected': total_collected,
             'total_value': Decimal(str(total_value)).quantize(Decimal('0.01')),
-            'low_stock': inventory_items.filter(quantity__lt=F('reorder_level')).count(),
+            'low_stock': inventory_items.filter(quantity__lt=settings.DEFAULT_REORDER_LEVEL).count(),
             'out_of_stock': inventory_items.filter(quantity=0).count(),
         }
-        
+
+        # Audit: record that reports dashboard was viewed (concise)
+        try:
+            user = getattr(self.request, 'user', None)
+            uname = getattr(user, 'username', 'Anonymous') if user and getattr(user, 'is_authenticated', False) else 'Anonymous'
+            AuditLog.objects.create(
+                user=user,
+                action='view_reports',
+                target='reports_dashboard',
+                detail=f"User '{uname}' viewed the reports dashboard"
+            )
+        except Exception:
+            pass
+
+        return context
+
+
+class AuditLogListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+    """Paginated view for AuditLog entries (admin only)."""
+    model = AuditLog
+    template_name = 'audit_logs/list.html'
+    context_object_name = 'logs'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = AuditLog.objects.select_related('user').order_by('-created_at')
+        q = self.request.GET.get('q')
+        action = self.request.GET.get('action')
+        target = self.request.GET.get('target')
+
+        if q:
+            qs = qs.filter(detail__icontains=q)
+
+        if action:
+            qs = qs.filter(action__iexact=action)
+
+        if target:
+            qs = qs.filter(target__icontains=target)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['q'] = self.request.GET.get('q', '')
+        context['action'] = self.request.GET.get('action', '')
+        context['target'] = self.request.GET.get('target', '')
+        # Build a compact page window for pagination (center current page)
+        paginator = context.get('paginator')
+        page_obj = context.get('page_obj')
+        page_numbers = []
+        if paginator and page_obj:
+            total = paginator.num_pages
+            current = page_obj.number
+            # window size (total pages to show)
+            window = 7
+            half = window // 2
+            start = max(1, current - half)
+            end = min(total, current + half)
+            # adjust when near edges
+            if (end - start + 1) < window:
+                if start == 1:
+                    end = min(total, start + window - 1)
+                elif end == total:
+                    start = max(1, end - window + 1)
+            page_numbers = list(range(start, end + 1))
+
+        context['page_numbers'] = page_numbers
+        context['show_first'] = (len(page_numbers) and page_numbers[0] > 1)
+        context['show_last'] = (len(page_numbers) and page_numbers[-1] < (paginator.num_pages if paginator else 0))
         return context
 
 
@@ -774,8 +853,9 @@ def inventory_report(request):
     context = {
         'products': products,
         'total_value': sum(p.quantity * p.unit_price for p in products),
-        'low_stock_count': products.filter(quantity__lt=F('reorder_level')).count(),
+        'low_stock_count': products.filter(quantity__lt=settings.DEFAULT_REORDER_LEVEL).count(),
         'out_of_stock_count': products.filter(quantity=0).count(),
+        'default_reorder_level': settings.DEFAULT_REORDER_LEVEL,
     }
     
     return render(request, 'reports/inventory_report.html', context)

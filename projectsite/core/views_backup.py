@@ -1,4 +1,5 @@
 # core/views_backup.py (add to core/views.py)
+import json
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView
 from django.shortcuts import render, redirect
@@ -6,7 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from .models import UserRole
+from .models import UserRole, AuditLog
 from .backup import BackupManager
 
 class AdminRequiredMixin(UserPassesTestMixin):
@@ -56,6 +57,16 @@ def create_backup_view(request):
                 request,
                 f"Backup created successfully: {result['filename']} ({result['size_mb']} MB)"
             )
+            try:
+                detail = f"filename={result.get('filename')}; size_mb={result.get('size_mb')}; description={result.get('description','')}"
+                AuditLog.objects.create(
+                    user=request.user,
+                    action='create_backup',
+                    target=result.get('filename'),
+                    detail=detail
+                )
+            except Exception:
+                pass
         else:
             messages.error(request, f"Backup failed: {result.get('error', 'Unknown error')}")
         
@@ -93,6 +104,15 @@ def restore_backup_view(request, backup_filename):
             
             if result.get('status') == 'success':
                 messages.success(request, f"Database restored from {backup_filename}")
+                try:
+                    AuditLog.objects.create(
+                        user=request.user,
+                        action='restore_backup',
+                        target=backup_filename,
+                        detail=f"restored={result.get('status')}; message={result.get('message','')}"
+                    )
+                except Exception:
+                    pass
             else:
                 messages.error(request, f"Restoration failed: {result.get('error')}")
         else:
@@ -123,6 +143,15 @@ def delete_backup_view(request, backup_filename):
             
             if result.get('status') == 'success':
                 messages.success(request, f"Backup {backup_filename} deleted")
+                try:
+                    AuditLog.objects.create(
+                        user=request.user,
+                        action='delete_backup',
+                        target=backup_filename,
+                        detail=f"deleted={result.get('status')}; message={result.get('message','')}"
+                    )
+                except Exception:
+                    pass
             else:
                 messages.error(request, f"Deletion failed: {result.get('error')}")
         else:
@@ -163,6 +192,16 @@ def cleanup_backups_view(request):
                 f"Cleanup completed: Deleted {result['deleted_count']} backups, "
                 f"Freed {result['freed_space_mb']} MB"
             )
+            try:
+                detail = f"deleted_count={result.get('deleted_count')}; freed_space_mb={result.get('freed_space_mb')}"
+                AuditLog.objects.create(
+                    user=request.user,
+                    action='cleanup_backups',
+                    target='backups_cleanup',
+                    detail=detail
+                )
+            except Exception:
+                pass
         else:
             messages.error(request, f"Cleanup failed: {result.get('error')}")
         
