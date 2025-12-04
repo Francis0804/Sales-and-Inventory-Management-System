@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Role - {{ user_obj.username }}{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+  <a href="{% url 'user-detail' user_obj.id %}" class="btn btn-sm btn-secondary mb-3">
+    <i class="bi bi-chevron-left"></i> Back to User
+  </a>
+  <h2 class="mb-1">Assign Role - {{ user_obj.username }}</h2>
+  <p class="text-muted">Set the role for this user account.</p>
+</div>
+
+<div class="row">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">User Role Assignment</h6>
+      </div>
+      <form method="post" class="card-body">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label for="roleSelect" class="form-label fw-bold">Select Role</label>
+          <select id="roleSelect" name="role" class="form-select" required>
+            <option value="">-- Choose a role --</option>
+            {% for value, label in role_choices %}
+              <option value="{{ value }}" {% if current_role == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Role Descriptions -->
+        <div class="alert alert-info">
+          <h6 class="alert-heading">Role Descriptions:</h6>
+          <ul class="mb-0 ps-3">
+            <li><strong>Administrator:</strong> Full access to all system features including reports, user management, and configuration.</li>
+            <li><strong>Cashier:</strong> Can create and manage purchase orders and view basic inventory information.</li>
+            <li><strong>Inventory Clerk:</strong> Can manage inventory, view stock levels, and generate inventory reports.</li>
+          </ul>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Assign Role
+          </button>
+          <a href="{% url 'user-detail' user_obj.id %}" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Current Info -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">Current Information</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label text-muted">Username</label>
+          <p>{{ user_obj.username }}</p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label text-muted">Email</label>
+          <p>{{ user_obj.email }}</p>
+        </div>
+        <div class="mb-3">
+          <label class="form-label text-muted">Current Role</label>
+          <p>
+            {% if current_role %}
+              <span class="badge bg-info">
+                {% for value, label in role_choices %}
+                  {% if value == current_role %}{{ label }}{% endif %}
+                {% endfor %}
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">Not Assigned</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

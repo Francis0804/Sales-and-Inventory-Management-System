@@ -871,6 +871,35 @@
             <span class="nav-tooltip">Purchases</span>
           </a>
         </li>
+
+        <!-- Reports - Admin Only -->
+        {% if user.is_authenticated and user.user_role and user.user_role.role == 'admin' %}
+        <li class="nav-item mt-3">
+          <a class="nav-link {% if request.resolver_match.url_name == 'reports-dashboard' %}active{% endif %}" href="{% url 'reports-dashboard' %}" title="Reports & Analytics">
+            <i class="bi bi-graph-up"></i>
+            <span>Reports</span>
+            <span class="nav-tooltip">Reports & Analytics</span>
+          </a>
+        </li>
+
+        <!-- User Management - Admin Only -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'user-list' %}active{% endif %}" href="{% url 'user-list' %}" title="User Management">
+            <i class="bi bi-people"></i>
+            <span>Users</span>
+            <span class="nav-tooltip">User Management</span>
+          </a>
+        </li>
+
+        <!-- Backup & Recovery - Admin Only -->
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'backup-list' %}active{% endif %}" href="{% url 'backup-list' %}" title="Database Backups">
+            <i class="bi bi-cloud-check"></i>
+            <span>Backups</span>
+            <span class="nav-tooltip">Backup & Recovery</span>
+          </a>
+        </li>
+        {% endif %}
       </ul>
     </nav>
 

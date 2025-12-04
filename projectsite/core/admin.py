@@ -1,6 +1,12 @@
 # core/admin.py
 from django.contrib import admin
-from .models import Supplier, Category, Product, PurchaseOrder, PurchaseItem, AuditLog
+from .models import Supplier, Category, Product, PurchaseOrder, PurchaseItem, AuditLog, UserRole
+
+@admin.register(UserRole)
+class UserRoleAdmin(admin.ModelAdmin):
+    list_display = ('user', 'role', 'user__username')
+    list_filter = ('role',)
+    search_fields = ('user__username',)
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

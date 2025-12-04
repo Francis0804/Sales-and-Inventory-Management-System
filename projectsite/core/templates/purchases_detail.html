@@ -73,9 +73,17 @@
               </tbody>
             </table>
           </div>
-          <div class="text-end mt-3">
-            <h5>
-              Total: <strong>P{{ purchase.total_amount|currency_format }}</strong>
+          <div class="text-end mt-3 border-top pt-3">
+            <div class="mb-2">
+              <span class="text-muted">Subtotal:</span>
+              <strong>P{{ purchase.total_subtotal|currency_format }}</strong>
+            </div>
+            <div class="mb-3">
+              <span class="text-muted">Tax ({{ purchase.tax_rate|floatformat:0 }}%):</span>
+              <strong class="text-warning">P{{ purchase.total_tax|currency_format }}</strong>
+            </div>
+            <h5 class="border-top pt-2">
+              Total: <strong class="text-success">P{{ purchase.total_amount|currency_format }}</strong>
             </h5>
           </div>
         {% else %}

@@ -2,26 +2,53 @@
 {% load currency_filters %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h2 class="mb-0">Purchases</h2>
-  <a href="{% url 'purchases-add' %}" class="btn btn-primary btn-sm">
-    <i class="bi bi-plus-circle"></i> Add Purchase
-  </a>
+<div class="mb-4">
+  <h2 class="mb-1">Purchases</h2>
+  <p class="text-muted">Manage purchase orders and restocking transactions.</p>
 </div>
-
-<!-- Search Bar -->
-<form method="get" class="mb-3">
-  <div class="input-group" style="max-width: 350px;">
-    <input type="text" name="q" class="form-control" placeholder="Search by PO Number..."
-           value="{{ request.GET.q }}">
-    <button class="btn btn-outline-secondary" type="submit">
-      <i class="bi bi-search"></i>
-    </button>
-  </div>
-</form>
 
 <div class="card">
   <div class="card-body">
+    <!-- Search and Filter Bar -->
+    <div class="mb-4">
+      <form method="get" class="row g-3 align-items-end">
+        <!-- Search Box -->
+        <div class="col-md-4">
+          <label for="searchInput" class="form-label fw-bold">Search</label>
+          <div class="input-group">
+            <input type="text" id="searchInput" name="q" class="form-control" placeholder="Search by PO Number..." value="{{ request.GET.q }}">
+            <button class="btn btn-outline-secondary" type="submit">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-md-3">
+          <label for="statusFilter" class="form-label fw-bold">Status</label>
+          <select id="statusFilter" name="status" class="form-select" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="received" {% if request.GET.status == 'received' %}selected{% endif %}>Received</option>
+            <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="col-md-2">
+          <a href="{% url 'purchases-list' %}" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-arrow-clockwise"></i> Reset
+          </a>
+        </div>
+
+        <!-- Add Purchase Button (Right Side) -->
+        <div class="col-md-3 text-end">
+          <a href="{% url 'purchases-add' %}" class="btn btn-primary w-100">
+            <i class="bi bi-plus-circle"></i> Add Purchase
+          </a>
+        </div>
+      </form>
+    </div>
+
     {% if purchases %}
       <div class="table-responsive" style="overflow-x: auto;">
         <table class="table table-hover">
