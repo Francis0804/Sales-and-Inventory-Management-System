@@ -85,31 +85,12 @@ TEMPLATES = [
 ]
 
 # ---------------- DATABASE ----------------
-# Database configuration
-# Primary: MySQL via PyMySQL. Values are taken from environment variables with sensible defaults.
-# If you prefer SQLite for local development, uncomment the SQLite block below.
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DB', 'sales_inventories_mgmt'),
-        'USER': os.environ.get('MYSQL_USER', 'root'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'root'),
-        'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('MYSQL_PORT', '3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-# # SQLite fallback (uncomment to use SQLite for quick local development)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 # ---------------- PASSWORD VALIDATORS ----------------
 AUTH_PASSWORD_VALIDATORS = [
