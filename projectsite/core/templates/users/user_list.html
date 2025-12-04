@@ -82,10 +82,12 @@
               <td>{{ user.email|default:"-" }}</td>
               <td>{{ user.get_full_name|default:"-" }}</td>
               <td>
-                {% if user.user_role %}
-                  <span class="badge bg-info">{{ user.user_role.get_role_display }}</span>
+                {% if user.is_staff %}
+                  <span class="badge bg-danger">Admin</span>
+                {% elif user.is_superuser %}
+                  <span class="badge bg-secondary">Staff</span>
                 {% else %}
-                  <span class="badge bg-secondary">Unassigned</span>
+                  <span class="badge bg-secondary">Staff</span>
                 {% endif %}
               </td>
               <td>{{ user.date_joined|date:"M d, Y" }}</td>
