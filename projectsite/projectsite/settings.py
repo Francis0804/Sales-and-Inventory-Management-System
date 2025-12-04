@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-replace-this-with-your-secret-key'
 DEBUG = True
 
 # ---------------- ALLOWED HOSTS ----------------
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'sales-and-inventory-system.pythonanywhere.com']
+ALLOWED_HOSTS = ['*']
 
 # ---------------- INSTALLED APPS ----------------
 INSTALLED_APPS = [
