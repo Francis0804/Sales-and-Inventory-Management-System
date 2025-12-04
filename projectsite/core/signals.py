@@ -206,12 +206,18 @@ for model in (Product, Supplier, Category, PurchaseOrder, PurchaseItem):
 # User activity signals
 @receiver(user_logged_in)
 def _user_logged_in(sender, request, user, **kwargs):
-    _create_audit(user, 'login', f'User:{user.pk}', f'IP={request.META.get("REMOTE_ADDR")}')
+    ip = request.META.get('REMOTE_ADDR') or request.META.get('HTTP_X_FORWARDED_FOR') or 'unknown'
+    uname = getattr(user, 'username', 'Unknown')
+    detail = f"User '{uname}' logged in from {ip}"
+    _create_audit(user, 'login', f'User:{user.pk}', detail)
 
 
 @receiver(user_logged_out)
 def _user_logged_out(sender, request, user, **kwargs):
-    _create_audit(user, 'logout', f'User:{getattr(user, "pk", None)}', f'IP={request.META.get("REMOTE_ADDR")}')
+    ip = request.META.get('REMOTE_ADDR') or request.META.get('HTTP_X_FORWARDED_FOR') or 'unknown'
+    uname = getattr(user, 'username', 'Unknown') if user else 'Unknown'
+    detail = f"User '{uname}' logged out from {ip}"
+    _create_audit(user, 'logout', f'User:{getattr(user, "pk", None)}', detail)
 # core/signals.py
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -240,3 +246,41 @@ def save_user_role(sender, instance, **kwargs):
         # If the user is staff/superuser, create as admin, otherwise cashier
         role = 'admin' if getattr(instance, 'is_superuser', False) or getattr(instance, 'is_staff', False) else 'cashier'
         UserRole.objects.create(user=instance, role=role)
+
+
+@receiver(post_save, sender=User)
+def audit_user_created(sender, instance, created, **kwargs):
+    """Create a human-friendly audit entry when a User is created.
+
+    - If created by an authenticated user (admin), record who created it.
+    - If created while request user is anonymous, assume registration form.
+    - If no request context and user is superuser/staff, assume createsuperuser.
+    """
+    if not created:
+        return
+
+    try:
+        current = get_current_user()
+        uname = getattr(instance, 'username', 'Unknown')
+        if current is None:
+            # No request context (likely management command)
+            if getattr(instance, 'is_superuser', False) or getattr(instance, 'is_staff', False):
+                detail = f"User '{uname}' was created via createsuperuser"
+            else:
+                detail = f"User '{uname}' was created programmatically"
+            _create_audit(None, 'created', f'User:{instance.pk}', detail)
+        else:
+            # There is a request context
+            try:
+                if getattr(current, 'is_authenticated', False):
+                    detail = f"User '{uname}' was created by '{current.username}'"
+                    _create_audit(current, 'created', f'User:{instance.pk}', detail)
+                else:
+                    # Anonymous request — registration form
+                    detail = f"User '{uname}' was created via registration form"
+                    _create_audit(None, 'created', f'User:{instance.pk}', detail)
+            except Exception:
+                # Fallback
+                _create_audit(None, 'created', f'User:{instance.pk}', f"User '{uname}' was created")
+    except Exception:
+        pass

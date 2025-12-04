@@ -37,7 +37,7 @@
             <td>{% if log.user %}{{ log.user.username }}{% else %}System{% endif %}</td>
             <td>{{ log.action }}</td>
             <td>{{ log.target }}</td>
-            <td style="max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ log.detail }}</td>
+            <td style="max-width:420px; white-space:normal; word-break:break-word;">{{ log.detail }}</td>
           </tr>
           {% empty %}
           <tr>
