@@ -1,7 +1,7 @@
 # core/forms.py
 from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm
 from .models import Category, Product, Supplier, PurchaseOrder, PurchaseItem
 
 class BootstrapFormMixin:
@@ -92,3 +92,17 @@ class UserProfileForm(BootstrapFormMixin, forms.ModelForm):
             'last_name': forms.TextInput(attrs={'placeholder': 'Last name'}),
             'email': forms.EmailInput(attrs={'placeholder': 'Email address'}),
         }
+
+
+class AdminUserCreationForm(BootstrapFormMixin, UserCreationForm):
+    """UserCreationForm with Bootstrap styling for admin create."""
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ('username', 'email')
+
+
+class AdminUserChangeForm(BootstrapFormMixin, forms.ModelForm):
+    """Simple user change form for admin edit (limited fields)."""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'is_active', 'is_staff']

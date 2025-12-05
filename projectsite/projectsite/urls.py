@@ -54,7 +54,10 @@ urlpatterns = [
 
     # User Management
     path('users/', views.UserListView.as_view(), name='user-list'),
+    path('users/add/', views.UserCreateView.as_view(), name='user-add'),
     path('users/<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
+    path('users/<int:pk>/edit/', views.UserUpdateView.as_view(), name='user-edit'),
+    path('users/<int:pk>/delete/', views.UserDeleteView.as_view(), name='user-delete'),
     path('users/<int:user_id>/assign-role/', views.assign_user_role, name='assign-role'),
 
     # Backup & Recovery
