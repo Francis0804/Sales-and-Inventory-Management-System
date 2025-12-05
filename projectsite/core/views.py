@@ -9,7 +9,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import Category, Product, Supplier, PurchaseOrder, PurchaseItem, UserRole, AuditLog
-from .forms import CategoryForm, ProductForm, SupplierForm, PurchaseOrderForm, PurchaseItemForm, BootstrapPasswordChangeForm, UserProfileForm
+from .forms import (
+    CategoryForm, ProductForm, SupplierForm, PurchaseOrderForm,
+    PurchaseItemForm, BootstrapPasswordChangeForm, UserProfileForm,
+    AdminUserCreationForm, AdminUserChangeForm,
+)
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.http import JsonResponse, HttpResponse
@@ -1008,14 +1012,84 @@ class UserDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
     login_url = 'login'
 
 
+class UserUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+    """Allow admin to update basic user fields."""
+    model = User
+    form_class = AdminUserChangeForm
+    template_name = 'users/user_form.html'
+    success_url = reverse_lazy('user-list')
+
+    def form_valid(self, form):
+        # Audit log user update
+        try:
+            user_obj = form.instance
+            AuditLog.objects.create(
+                user=self.request.user,
+                action='update_user',
+                target=f'User:{user_obj.pk}',
+                detail=f"User '{user_obj.username}' updated by '{self.request.user.username}'"
+            )
+        except Exception:
+            pass
+        return super().form_valid(form)
+
+
+class UserDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+    """Allow admin to delete a user account."""
+    model = User
+    template_name = 'users/user_confirm_delete.html'
+    success_url = reverse_lazy('user-list')
+
+    def delete(self, request, *args, **kwargs):
+        user_obj = self.get_object()
+        username = user_obj.username
+        resp = super().delete(request, *args, **kwargs)
+        try:
+            AuditLog.objects.create(
+                user=request.user,
+                action='delete_user',
+                target=f'User:{user_obj.pk}',
+                detail=f"User '{username}' deleted by '{request.user.username}'"
+            )
+        except Exception:
+            pass
+        return resp
+
+
+class UserCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+    """Admin-only user creation using Django's UserCreationForm."""
+    model = User
+    form_class = AdminUserCreationForm
+    template_name = 'users/user_form.html'
+    success_url = reverse_lazy('user-list')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Ensure a default role exists for the new user
+        try:
+            new_user = form.instance
+            UserRole.objects.get_or_create(user=new_user, defaults={'role': 'cashier'})
+            AuditLog.objects.create(
+                user=self.request.user,
+                action='create_user',
+                target=f'User:{new_user.pk}',
+                detail=f"User '{new_user.username}' created by '{self.request.user.username}'"
+            )
+        except Exception:
+            pass
+        return response
+
+
 @login_required(login_url='login')
 def assign_user_role(request, user_id):
     """Assign role to user"""
-    # Check if user is admin
+    # Allow only staff users or users with the 'admin' role
     try:
-        if request.user.user_role.role != 'admin':
+        is_staff_flag = getattr(request.user, 'is_staff', False)
+        user_role_value = request.user.user_role.role if hasattr(request.user, 'user_role') else None
+        if not (is_staff_flag or user_role_value == 'admin'):
             from django.contrib import messages
-            messages.error(request, 'You do not have permission to manage user roles. Only Administrators can perform this action.')
+            messages.error(request, 'You do not have permission to manage user roles. Only Administrators and staff can perform this action.')
             return redirect('home')
     except UserRole.DoesNotExist:
         return redirect('home')
@@ -1025,16 +1099,39 @@ def assign_user_role(request, user_id):
     if request.method == 'POST':
         role = request.POST.get('role')
         user_role, created = UserRole.objects.get_or_create(user=user)
+        old_role = user_role.role
         user_role.role = role
         user_role.save()
-        
+
+        # Audit: record role assignment/change
+        try:
+            actor = request.user if getattr(request, 'user', None) and request.user.is_authenticated else None
+            # Friendly detail message
+            role_map = dict(UserRole.ROLE_CHOICES)
+            new_label = role_map.get(role, role)
+            old_label = role_map.get(old_role, old_role)
+            if created:
+                detail = f"Role '{new_label}' assigned to '{user.username}'"
+            elif old_role != role:
+                detail = f"Role for '{user.username}' changed from '{old_label}' to '{new_label}'"
+            else:
+                detail = f"Role for '{user.username}' confirmed as '{new_label}'"
+            AuditLog.objects.create(user=actor, action='assign_role', target=f'User:{user.pk}', detail=detail)
+        except Exception:
+            pass
+
         from django.contrib import messages
         messages.success(request, f'Role "{user_role.get_role_display()}" assigned to {user.username} successfully!')
         return redirect('user-detail', pk=user_id)
     
     context = {
         'user_obj': user,
-        'role_choices': UserRole.ROLE_CHOICES,
+        # Ensure the dropdown shows the intended roles regardless of runtime state
+        'role_choices': [
+            ('admin', 'Administrator'),
+            ('cashier', 'Cashier'),
+            ('inventory_clerk', 'Inventory Clerk'),
+        ],
         'current_role': user.user_role.role if hasattr(user, 'user_role') else 'cashier'
     }
     return render(request, 'users/assign_role.html', context)
