@@ -51,6 +51,7 @@ urlpatterns = [
     path('reports/fast-moving/', views.fast_moving_report, name='fast-moving-report'),
     path('reports/profit-loss/', views.profit_loss_report, name='profit-loss-report'),
     path('reports/export/excel/', views.export_report_excel, name='export-excel'),
+    path('reports/export/pdf/', views.export_report_pdf, name='export-pdf'),
 
     # User Management
     path('users/', views.UserListView.as_view(), name='user-list'),

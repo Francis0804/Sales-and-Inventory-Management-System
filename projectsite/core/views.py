@@ -22,6 +22,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from django.utils import timezone
 import json
+from io import BytesIO
 try:
     from openpyxl import Workbook
     EXCEL_AVAILABLE = True
@@ -779,6 +780,13 @@ class ReportsView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
         except Exception:
             pass
 
+        # Indicate admin status to templates in a safe way
+        try:
+            context['is_admin'] = (self.request.user.user_role.role == 'admin')
+        except Exception:
+            # Fallback to is_staff if user_role missing
+            context['is_admin'] = getattr(self.request.user, 'is_staff', False)
+
         return context
 
 
@@ -969,6 +977,108 @@ def export_report_excel(request):
     response['Content-Disposition'] = f'attachment; filename="report_{report_type}_{now.strftime("%Y%m%d")}.xlsx"'
     wb.save(response)
     return response
+
+
+@login_required(login_url='login')
+@require_http_methods(["GET"])
+def export_report_pdf(request):
+    """Export report to PDF using reportlab (admin only)."""
+    # Check admin role
+    try:
+        if request.user.user_role.role != 'admin':
+            return JsonResponse({'error': 'Only Administrators can export reports'}, status=403)
+    except UserRole.DoesNotExist:
+        return JsonResponse({'error': 'User role not assigned'}, status=403)
+
+    if not PDF_AVAILABLE:
+        return JsonResponse({'error': 'PDF export not available (reportlab missing)'}, status=400)
+
+    report_type = request.GET.get('type', 'inventory')
+    now = timezone.now()
+
+    buffer = BytesIO()
+    # Use SimpleDocTemplate to build PDF
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=18)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title = 'Inventory Report' if report_type == 'inventory' else f'Report: {report_type}'
+    elements.append(Paragraph(title, styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    if report_type == 'inventory':
+        data = [['Product Code', 'Product Name', 'Category', 'Supplier', 'Quantity', 'Unit Price', 'Total Value']]
+        products = Product.objects.select_related('category', 'supplier').all()
+        for p in products:
+            data.append([
+                p.code,
+                p.name,
+                p.category.name if p.category else '',
+                p.supplier.name if p.supplier else '',
+                str(p.quantity),
+                f"{float(p.unit_price):.2f}",
+                f"{float(p.quantity * p.unit_price):.2f}",
+            ])
+
+        table = Table(data, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ]))
+        elements.append(table)
+    elif report_type == 'profit-loss':
+        # Build a profit-loss report for the current month
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        purchases = PurchaseOrder.objects.filter(created_at__gte=month_start).order_by('created_at')
+
+        data = [['Date', 'PO Number', 'Subtotal', 'Tax', 'Total']]
+        total_sub = Decimal('0.00')
+        total_tax = Decimal('0.00')
+        total_amount = Decimal('0.00')
+        for p in purchases:
+            date_str = p.created_at.strftime('%Y-%m-%d') if p.created_at else ''
+            po_num = getattr(p, 'po_number', str(p.pk))
+            sub = p.total_subtotal or Decimal('0.00')
+            tax = p.total_tax or Decimal('0.00')
+            amt = p.total_amount or Decimal('0.00')
+            data.append([date_str, po_num, f"{float(sub):.2f}", f"{float(tax):.2f}", f"{float(amt):.2f}"])
+            total_sub += sub
+            total_tax += tax
+            total_amount += amt
+
+        # Totals row
+        data.append(['', 'Totals', f"{float(total_sub):.2f}", f"{float(total_tax):.2f}", f"{float(total_amount):.2f}"])
+
+        table = Table(data, repeatRows=1, hAlign='LEFT')
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('SPAN', (0, -1), (1, -1)),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#f1f1f1')),
+        ]))
+        elements.append(Paragraph(f"Profit & Loss - {now.strftime('%B %Y')}", styles['Heading2']))
+        elements.append(Spacer(1, 8))
+        elements.append(table)
+    else:
+        elements.append(Paragraph('No report implementation for this type.', styles['Normal']))
+
+    try:
+        doc.build(elements)
+        pdf = buffer.getvalue()
+        buffer.close()
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="report_{report_type}_{now.strftime("%Y%m%d")}.pdf"'
+        response.write(pdf)
+        return response
+    except Exception as e:
+        return JsonResponse({'error': 'Failed to generate PDF', 'details': str(e)}, status=500)
 
 
 # ========================================
